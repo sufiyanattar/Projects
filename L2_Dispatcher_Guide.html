@@ -1,0 +1,1691 @@
+<meta charset="utf-8">
+<title>L2 Packet Dispatcher</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
+<style>
+/* Layout: microchip.com page pattern - white header, uppercase tab nav, grey breadcrumb, navy title band, orange/blue/green stripe.
+   Content is a datasheet-style technical reference: numbered sections, TABLE x-y / FIGURE x-y captions, standard flowchart + UML sequence symbols. */
+:root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --ink-2: #4a4a4a;
+  --line: #cfd3d8;
+  --panel: #f2f2f2;
+  --code-bg: #f4f4f4;
+  --red: #e31b23;
+  --red-soft: #fdecec;
+  --navy: #1c3460;
+  --navy-2: #0f2140;
+  --navy-soft: #e9eef6;
+  --orange: #f7941d; --sky: #4cb4e7; --green: #78be43;
+  --ok: #2f7d1e;  --ok-bg: #eef7e8;
+  --warn: #a35c00; --warn-bg: #fef3e4;
+  --info-bg: #e9f5fc;
+  --f-body: "Open Sans", "Segoe UI", Arial, sans-serif;
+  --f-mono: "Source Code Pro", Consolas, "Courier New", monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.6 var(--f-body); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+[hidden], section.page[hidden] { display: none !important; }
+.wrap { max-width: 74rem; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+a { color: var(--navy); text-underline-offset: 2px; }
+
+/* header */
+header.top .wrap { padding-block: 20px 14px; display: flex; flex-wrap: wrap; gap: 10px 24px; align-items: center; justify-content: space-between; }
+.brand { display: flex; gap: 12px; align-items: center; }
+.mark { width: 44px; height: 44px; border-radius: 50%; background: var(--red); display: grid; place-items: center; flex: none; }
+.mark svg { width: 26px; height: 26px; }
+.brand h1 { margin: 0; font: 700 1.55rem/1.1 var(--f-body); letter-spacing: -.01em; }
+.brand h1 small { display: block; font: 400 .84rem/1.3 var(--f-body); color: var(--ink-2); margin-top: 4px; letter-spacing: 0; }
+
+/* tab nav */
+nav.tabs { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+nav.tabs .wrap { display: flex; justify-content: space-between; gap: 2px; overflow-x: auto; scrollbar-width: thin; }
+nav.tabs button { font: 700 .82rem/1 var(--f-body); letter-spacing: .02em; text-transform: uppercase; color: var(--ink); background: none; border: 0; border-bottom: 3px solid transparent; padding: 16px 8px 13px; cursor: pointer; white-space: nowrap; }
+nav.tabs button:hover { color: var(--red); }
+nav.tabs button[aria-selected="true"] { color: var(--red); border-bottom-color: var(--red); }
+nav.tabs button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+
+/* breadcrumb, title band, stripe */
+.crumbs { background: var(--panel); }
+.crumbs .wrap { padding-block: 14px; font: 600 1rem/1.3 var(--f-body); }
+.crumbs span + span::before { content: "/"; margin: 0 10px; }
+.hero { color: #fff; background-color: var(--navy);
+  background-image:
+    linear-gradient(100deg, rgba(15,33,64,.95) 0%, rgba(28,52,96,.72) 55%, rgba(15,33,64,.92) 100%),
+    repeating-linear-gradient(0deg, rgba(120,170,230,.10) 0 1px, transparent 1px 28px),
+    repeating-linear-gradient(90deg, rgba(120,170,230,.10) 0 1px, transparent 1px 28px); }
+.hero .wrap { padding-block: 36px 38px; }
+.hero h2 { color: #fff; font: 600 2.3rem/1.15 var(--f-body); margin: 0; text-wrap: balance; }
+.hero p { color: #fff; opacity: .9; font-size: 1.02rem; max-width: 70ch; margin: 10px 0 0; }
+.stripe { display: flex; gap: 5px; height: 8px; margin-top: 5px; }
+.stripe span { flex: 1; }
+.stripe span:nth-child(1) { background: var(--orange); }
+.stripe span:nth-child(2) { background: var(--sky); }
+.stripe span:nth-child(3) { background: var(--green); }
+
+/* content */
+main .wrap { padding-block: 36px 64px; }
+section.page { display: grid; gap: 34px; }
+.intro { display: none; }
+.sec { display: grid; gap: 14px; min-width: 0; }
+h3 { font: 700 1.3rem/1.25 var(--f-body); margin: 0; padding-bottom: 8px; border-bottom: 2px solid var(--ink); text-wrap: balance; }
+h3 .n { color: var(--red); margin-right: 10px; }
+h4 { font: 700 1rem/1.3 var(--f-body); margin: 0; }
+p { margin: 0; max-width: 76ch; }
+ul, ol { margin: 0; padding-left: 1.3em; max-width: 76ch; }
+li + li { margin-top: 4px; }
+code, .mono { font-family: var(--f-mono); font-size: .9em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 2px; }
+pre { background: var(--code-bg); border: 1px solid var(--line); padding: 14px 16px; overflow-x: auto; margin: 0; font: .86rem/1.55 var(--f-mono); }
+pre code { background: none; padding: 0; }
+.cap { font: 700 .78rem/1.3 var(--f-body); letter-spacing: .04em; text-transform: uppercase; margin: 0 0 6px; }
+.cap span { color: var(--ink-2); font-weight: 600; text-transform: none; letter-spacing: 0; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: 24px; align-items: start; }
+.grid2 > * { min-width: 0; }
+
+/* tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 8px 11px; border: 1px solid var(--line); vertical-align: top; }
+thead th { font: 700 .76rem/1.25 var(--f-body); letter-spacing: .03em; text-transform: uppercase; background: var(--navy); color: #fff; border-color: var(--navy); white-space: nowrap; }
+tbody tr:nth-child(even) td { background: #fafafa; }
+td.k { font-weight: 600; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+td.mono, td .mono { white-space: nowrap; }
+.tbl table { border-style: hidden; }
+
+/* notes and badges */
+.note { border-left: 5px solid var(--sky); background: var(--info-bg); padding: 12px 16px; }
+.note.warn { border-color: var(--orange); background: var(--warn-bg); }
+.note strong:first-child { display: block; margin-bottom: 2px; }
+.pill { display: inline-block; font: 700 .7rem/1 var(--f-body); letter-spacing: .04em; text-transform: uppercase; padding: 5px 7px; white-space: nowrap; }
+.pill.hi { background: var(--red-soft); color: #a3141a; }
+.pill.md { background: var(--warn-bg); color: var(--warn); }
+.pill.lo { background: var(--panel); color: var(--ink-2); }
+.pill.done { background: var(--ok-bg); color: var(--ok); }
+.pill.open { background: var(--warn-bg); color: var(--warn); }
+
+/* figures (SVG diagrams) */
+.fig { border: 1px solid var(--line); background: #fff; padding: 14px; overflow-x: auto; }
+.fig svg { display: block; width: 100%; height: auto; }
+.fig svg text { font-family: "Open Sans", "Segoe UI", Arial, sans-serif; font-size: 13px; fill: #000; }
+.fig svg .c { text-anchor: middle; }
+.fig svg .e { text-anchor: end; }
+.fig svg .b { font-weight: 700; }
+.fig svg .s { font-size: 11.5px; fill: #333; }
+.fig svg .m { font-family: "Source Code Pro", Consolas, monospace; font-size: 11.5px; }
+.fig svg .bx { fill: #fff; stroke: #000; stroke-width: 1.4; }
+.fig svg .hl { fill: #e9eef6; stroke: #1c3460; stroke-width: 1.6; }
+.fig svg .gr { fill: #f2f2f2; stroke: #000; stroke-width: 1.4; }
+.fig svg .er { fill: #fdecec; stroke: #e31b23; stroke-width: 1.4; }
+.fig svg .nt { fill: #fff7e6; stroke: #a35c00; stroke-width: 1; }
+.fig svg .ln { fill: none; stroke: #000; stroke-width: 1.4; }
+.fig svg .ds { stroke-dasharray: 6 4; }
+.fig svg .ll { stroke: #8a8a8a; stroke-width: 1; stroke-dasharray: 4 4; }
+.fig svg .fr { fill: none; stroke: #000; stroke-width: 1; }
+.photo { border: 1px solid var(--line); background: #fff; padding: 12px; display: grid; place-items: center; }
+.photo img { display: block; width: 100%; max-width: 512px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: .8rem; color: var(--ink-2); margin-top: 8px; }
+
+/* frame strip */
+.bytes { display: flex; flex-wrap: wrap; gap: 3px; }
+.byte { border: 1px solid var(--ink); padding: 6px 8px; text-align: center; min-width: 4.4rem; }
+.byte b { display: block; font: 600 .86rem/1.2 var(--f-mono); }
+.byte small { display: block; font-size: .7rem; color: var(--ink-2); }
+.byte.sf { background: var(--red-soft); }
+.byte.pl { flex: 1 1 8rem; background: var(--panel); }
+
+/* HTML block flow (pipelines) */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; }
+.node { flex: 1 1 9rem; min-width: 9rem; border: 1.4px solid var(--ink); padding: 10px 12px; background: #fff; }
+.node.hl { background: var(--navy-soft); border-color: var(--navy); }
+.node b { display: block; font-size: .92rem; }
+.node small { display: block; color: var(--ink-2); font-size: .8rem; margin-top: 2px; }
+.link { flex: 0 0 auto; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 6px; font: 600 .7rem/1.2 var(--f-mono); color: var(--ink-2); min-width: 84px; text-align: center; }
+.link::after { content: "\2192"; font-size: 1.4rem; color: var(--ink); line-height: 1; }
+@media (max-width: 680px) { .flow { flex-direction: column; } .link { padding: 4px 0; } .link::after { content: "\2193"; } .node { min-width: 0; } .hero h2 { font-size: 1.8rem; } }
+
+/* layer diagram */
+.layers { display: grid; gap: 4px; }
+.layer { display: grid; grid-template-columns: 9.5rem 1fr; gap: 4px; }
+.layer > .lname { background: var(--navy); color: #fff; font: 700 .76rem/1.3 var(--f-body); text-transform: uppercase; letter-spacing: .03em; padding: 10px; display: flex; align-items: center; }
+.layer > .cells { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: 4px; }
+.cell { border: 1.4px solid var(--ink); padding: 8px 10px; background: #fff; min-width: 0; }
+.cell b { display: block; font-size: .88rem; }
+.cell small { display: block; font: .74rem/1.35 var(--f-mono); color: var(--ink-2); word-break: break-word; }
+.layer.hw .cell { background: var(--panel); }
+@media (max-width: 560px) { .layer { grid-template-columns: 1fr; } }
+
+/* frame builder */
+.builder { border: 1px solid var(--line); background: var(--panel); padding: 16px; display: grid; gap: 12px; }
+.builder .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.builder label { display: grid; gap: 4px; font-size: .84rem; font-weight: 600; flex: 1 1 13rem; min-width: 0; }
+.builder input, .builder select { font: .9rem var(--f-mono); padding: 9px 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); width: 100%; }
+.out { font: 600 .9rem/1.6 var(--f-mono); word-break: break-all; background: #fff; border: 1px solid var(--line); padding: 10px 12px; }
+.out .s { color: var(--red); }
+.out .info { font: 400 .78rem/1.4 var(--f-body); color: var(--ink-2); margin-top: 4px; }
+.btn { font: 700 .9rem/1 var(--f-body); border: 0; background: var(--navy); color: #fff; padding: 13px 20px; cursor: pointer; }
+.btn:hover { background: var(--navy-2); }
+
+footer { background: var(--panel); color: var(--ink-2); font-size: .82rem; }
+footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a15 15 0 0 1 20 0"/><path d="M5.5 12.5a10 10 0 0 1 13 0"/><path d="M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.5" r="1.4" fill="#fff"/></svg></div>
+      <h1>L2 Packet Dispatcher<small>4G Modem To Wi-Fi Layer 2 Dispatcher On SAMA5D27-WLSOM1 &middot; Technical Reference</small></h1>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="wrap" role="tablist">
+    <button role="tab" data-tab="overview">Overview</button>
+    <button role="tab" data-tab="concepts">Concepts</button>
+    <button role="tab" data-tab="hardware">Hardware</button>
+    <button role="tab" data-tab="image">Linux Image</button>
+    <button role="tab" data-tab="usbfix">USB Fix</button>
+    <button role="tab" data-tab="bridge">Phone &amp; Bridge</button>
+    <button role="tab" data-tab="dispatcher">Dispatcher</button>
+    <button role="tab" data-tab="tools">Tools &amp; Reference</button>
+    <button role="tab" data-tab="mcu">MCU Option</button>
+    <button role="tab" data-tab="status">Status</button>
+  </div>
+</nav>
+
+<div class="crumbs"><div class="wrap"><span>L2 Dispatcher</span><span>SAMA5D27-WLSOM1-EK1</span><span id="crumb">Overview</span></div></div>
+<div class="hero"><div class="wrap"><h2 id="hero-title">System Overview</h2><p id="hero-lead"></p></div></div>
+<div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
+
+<main><div class="wrap">
+
+<!-- =================================================================== 1 OVERVIEW -->
+<section class="page" id="overview" role="tabpanel" aria-label="Overview">
+  <div class="intro"><h2>System Overview</h2><p>The board takes Internet from a USB modem (an Android phone today, a Quectel EC25 later) and shares it with up to 4 Wi-Fi clients by copying raw Ethernet frames. It does no routing, no NAT and no DHCP, and has no IP address on the data path.</p></div>
+
+  <div class="sec">
+    <h3><span class="n">1.1</span>System block diagram</h3>
+    <div>
+      <p class="cap">Figure 1-1: <span>Data path and management path (as built and tested)</span></p>
+      <div class="fig"><svg viewBox="0 0 1400 450" style="min-width:900px" role="img" aria-label="System block diagram">
+        <defs><marker id="m11" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <!-- column 1: outside world -->
+        <rect class="gr" x="20" y="42" width="140" height="64"/>
+        <text class="c b" x="90" y="70">Cell network</text><text class="c s" x="90" y="90">1 IPv4 per SIM</text>
+        <line class="ln" x1="160" y1="74" x2="310" y2="74" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <text class="c s" x="235" y="66">LTE / 5G</text><text class="c s" x="235" y="92">operator link</text>
+        <rect class="bx" x="310" y="36" width="170" height="76"/>
+        <text class="c b" x="395" y="59">Android phone</text><text class="c s" x="395" y="78">Realme P1 Pro 5G</text><text class="c s" x="395" y="96">NAT + DHCP &middot; 192.168.56.11</text>
+        <text class="c s" x="395" y="132">Layer 3 lives here</text>
+        <!-- phone <-> EHCI -->
+        <line class="ln" x1="480" y1="74" x2="730" y2="74" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <text class="c s" x="590" y="66">USB 2.0 HS (480 Mbps) &middot; RNDIS</text><text class="c s" x="590" y="92">USB-A host, VBUS PA10</text>
+        <!-- build PC <-> console -->
+        <rect class="gr" x="310" y="383" width="170" height="52"/>
+        <text class="c b" x="395" y="404">Build PC</text><text class="c s" x="395" y="423">/dev/ttyUSB0 (FT232)</text>
+        <line class="ln" x1="480" y1="409" x2="730" y2="409" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <text class="c s" x="590" y="401">UART console 115200 8N1</text><text class="c s" x="590" y="427">tools/board.py, push.py</text>
+        <!-- column 2: board -->
+        <rect class="hl" x="700" y="8" width="360" height="438"/>
+        <text class="c b" x="880" y="31">SAMA5D27-WLSOM1 &middot; Linux 6.12.48</text>
+        <rect class="bx" x="730" y="48" width="300" height="52"/><text class="c b" x="880" y="69">USB host (EHCI, port B)</text><text class="c s" x="880" y="88">atmel-ehci 500000 &middot; cpuidle.off=1</text>
+        <rect class="bx" x="730" y="116" width="300" height="52"/><text class="c b" x="880" y="137">rndis_host &rarr; enu2</text><text class="c s" x="880" y="156">usbnet &middot; promiscuous &middot; no IP</text>
+        <rect class="bx" x="730" y="184" width="300" height="52" style="stroke-width:2.6"/><text class="c b" x="880" y="205">l2disp (user space)</text><text class="c s" x="880" y="224">2 &times; AF_PACKET &middot; poll() &middot; EAPOL filter</text>
+        <rect class="bx" x="730" y="252" width="300" height="52"/><text class="c b" x="880" y="273">wlan0 + hostapd</text><text class="c s" x="880" y="292">WPA2-PSK &middot; channel 6 &middot; max 4 STA</text>
+        <rect class="bx" x="730" y="320" width="300" height="52"/><text class="c b" x="880" y="341">WILC3000 (wilc_sdio)</text><text class="c s" x="880" y="360">SDIO 50 MHz &middot; mmc1</text>
+        <line class="ln" x1="880" y1="100" x2="880" y2="116" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <line class="ln" x1="880" y1="168" x2="880" y2="184" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <line class="ln" x1="880" y1="236" x2="880" y2="252" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <line class="ln" x1="880" y1="304" x2="880" y2="320" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <rect class="gr" x="730" y="392" width="300" height="34"/><text class="c s" x="880" y="413">ttyS0 console &middot; eth0 management only</text>
+        <!-- column 3: clients -->
+        <line class="ln" x1="1030" y1="346" x2="1250" y2="346" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <text class="c s" x="1155" y="338">Wi-Fi 2.4 GHz</text><text class="c s" x="1155" y="364">SSID L2_Dispatcher</text>
+        <rect class="bx" x="1250" y="287" width="130" height="118"/>
+        <text class="c b" x="1315" y="313">Wi-Fi clients</text><text class="c s" x="1315" y="333">1 to 4 stations</text><text class="c s" x="1315" y="353">IPs from phone</text><text class="c s" x="1315" y="373">192.168.56.x</text><text class="c s" x="1315" y="393">+ public IPv6</text>
+        <!-- data path note -->
+        <rect class="nt" x="1170" y="60" width="210" height="150"/>
+        <text class="b" x="1182" y="84">Data path (no IP)</text>
+        <text class="s" x="1182" y="106">enu2 &harr; l2disp &harr; wlan0</text>
+        <text class="s" x="1182" y="126">raw Ethernet frames,</text>
+        <text class="s" x="1182" y="144">broadcast + multicast incl.</text>
+        <text class="s" x="1182" y="164">EAPOL 0x888E kept local</text>
+        <text class="s" x="1182" y="184">~13 Mbps measured</text>
+      </svg></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">1.2</span>Key parameters</h3>
+      <div>
+        <p class="cap">Table 1-1: <span>Measured on the bench, 2026-11-02 to 11-03</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Parameter</th><th>Value</th></tr></thead>
+          <tbody>
+          <tr><td class="k">Board</td><td>SAMA5D27-WLSOM1-EK1, Cortex-A5 (<code>armv7l</code>), 256 MB DDR</td></tr>
+          <tr><td class="k">OS</td><td>Linux4Microchip 2025.10 (Yocto, headless), kernel 6.12.48, rebuilt</td></tr>
+          <tr><td class="k">Modem side</td><td><code>enu2</code>, RNDIS over USB 2.0 High-Speed (480 Mbps)</td></tr>
+          <tr><td class="k">AP side</td><td><code>wlan0</code>, WILC3000, 802.11g, channel 6, WPA2-PSK, <code>max_num_sta=4</code></td></tr>
+          <tr><td class="k">Forwarder</td><td><code>l2disp</code>, static ARMv7 binary, ~410 KB, CPU ~0 %</td></tr>
+          <tr><td class="k">Throughput</td><td class="num">~13 Mbps (l2disp) vs ~12 Mbps (Linux bridge), fast.com, same client</td></tr>
+          <tr><td class="k">Latency to phone</td><td class="num">avg 1.181 ms, 200 &times; 1400 B pings, 0 % loss</td></tr>
+          <tr><td class="k">Latency to 8.8.8.8</td><td class="num">34 to 47 ms (avg 41.2 ms)</td></tr>
+          <tr><td class="k">Clients tested</td><td>3 at the same time (4th not yet)</td></tr>
+          <tr><td class="k">Key fix</td><td>Kernel boot option <code>cpuidle.off=1</code> (USB Fix tab)</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">1.3</span>Who does what</h3>
+      <div>
+        <p class="cap">Table 1-2: <span>Strict Layer 2 split</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Function</th><th>Modem / phone</th><th>Board</th></tr></thead>
+          <tbody>
+          <tr><td class="k">NAT (1 public IP shared)</td><td>Yes</td><td>No</td></tr>
+          <tr><td class="k">DHCP server</td><td>Yes (192.168.56.11)</td><td>No</td></tr>
+          <tr><td class="k">IP routing</td><td>Yes</td><td>No</td></tr>
+          <tr><td class="k">IP on data interfaces</td><td>&mdash;</td><td>None (IPv4 off, IPv6 link-local off)</td></tr>
+          <tr><td class="k">Forward Ethernet frames</td><td>&mdash;</td><td>Yes, both ways, incl. broadcast / multicast (DHCP, ARP, IPv6 ND)</td></tr>
+          <tr><td class="k">Wi-Fi AP, WPA2 handshake</td><td>&mdash;</td><td>hostapd (EAPOL stays on the board)</td></tr>
+          <tr><td class="k">Client &harr; client traffic</td><td>&mdash;</td><td>Stays inside the AP</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="note"><strong>Why the modem must do NAT</strong><p>The operator gives one IPv4 address per SIM. Pure L2 forwarding cannot share it among 4 clients, so NAT happens in the modem ("router mode"). Each client also gets its own public IPv6 address from the phone's /64.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">1.4</span>Bring-up plan</h3>
+    <div>
+      <p class="cap">Figure 1-2: <span>Steps as executed</span></p>
+      <div class="flow">
+        <div class="node"><b>1 Boot</b><small>Linux4SAM on SD</small></div><div class="link">serial</div>
+        <div class="node"><b>2 Drivers</b><small>RNDIS missing &rarr; rebuilt</small></div><div class="link">wlan0</div>
+        <div class="node"><b>3 Wi-Fi AP</b><small>hostapd</small></div><div class="link">USB</div>
+        <div class="node"><b>4 Phone</b><small>cpuidle fix</small></div>
+      </div>
+      <div class="flow" style="margin-top:8px">
+        <div class="node"><b>5 Bridge</b><small>kernel bridge br0</small></div><div class="link">AF_PACKET</div>
+        <div class="node hl"><b>6 Dispatcher</b><small>l2disp at boot</small></div><div class="link">later</div>
+        <div class="node"><b>7 EC25</b><small>not ordered</small></div>
+      </div>
+    </div>
+    <div>
+      <p class="cap">Table 1-3: <span>Pass criteria and result</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Step</th><th>What</th><th>Pass criterion</th><th>Result</th></tr></thead>
+        <tbody>
+        <tr><td class="k">1</td><td>Flash image, boot, serial console 115200</td><td>Shell prompt</td><td><span class="pill done">Pass</span></td></tr>
+        <tr><td class="k">2</td><td>Kernel config check</td><td>USB net drivers and bridge present</td><td><span class="pill done">Pass</span> after kernel rebuild</td></tr>
+        <tr><td class="k">3</td><td>hostapd AP</td><td>Clients see and join <code>L2_Dispatcher</code></td><td><span class="pill done">Pass</span> 3 clients</td></tr>
+        <tr><td class="k">4</td><td>Phone USB tethering, DHCP, ping</td><td>Board reaches the Internet</td><td><span class="pill done">Pass</span> with <code>cpuidle.off=1</code></td></tr>
+        <tr><td class="k">5</td><td><code>br0</code> = <code>enu2</code> + <code>wlan0</code></td><td>Clients get IPs from the phone, have Internet</td><td><span class="pill done">Pass</span> 3 clients</td></tr>
+        <tr><td class="k">6</td><td>Replace <code>br0</code> with <code>l2disp</code></td><td>Same result as step 5</td><td><span class="pill done">Pass</span> 1 client tested, starts at boot</td></tr>
+        <tr><td class="k">7</td><td>Swap the phone for a Quectel EC25 (ECM)</td><td>Same result with real 4G</td><td><span class="pill open">Open</span> modem not available</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== 2 CONCEPTS -->
+<section class="page" id="concepts" role="tabpanel" aria-label="Concepts" hidden>
+  <div class="intro"><h2>Concepts</h2><p>The networking and USB ideas behind the design: protocol layers, Ethernet frames, why the modem must do NAT, how DHCP and ARP cross a Layer 2 device, how a phone looks like a network card, and how Wi-Fi security fits in.</p></div>
+
+  <div class="sec">
+    <h3><span class="n">2.1</span>Protocol layers</h3>
+    <div class="note"><strong>Definition 2-1: Layer 2 device</strong><p>A device that moves Ethernet frames by MAC address only. It never reads or changes IP headers, so it needs no IP address, no routing table and no NAT. A switch, a bridge and the L2 dispatcher are Layer 2 devices.</p></div>
+    <div class="grid2">
+      <div>
+        <p class="cap">Figure 2-1: <span>OSI layers and where each part of the system works</span></p>
+        <div class="fig"><svg viewBox="0 0 560 330" role="img" aria-label="OSI layers">
+          <rect class="gr" x="20" y="14" width="170" height="40"/><text class="c b" x="105" y="39">7 &ndash; 5 Application</text>
+          <rect class="gr" x="20" y="60" width="170" height="40"/><text class="c b" x="105" y="85">4 Transport</text>
+          <rect class="gr" x="20" y="106" width="170" height="40"/><text class="c b" x="105" y="131">3 Network (IP)</text>
+          <rect class="hl" x="20" y="152" width="170" height="60"/><text class="c b" x="105" y="178">2 Data link</text><text class="c s" x="105" y="197">Ethernet frames, MAC</text>
+          <rect class="gr" x="20" y="218" width="170" height="60"/><text class="c b" x="105" y="244">1 Physical</text><text class="c s" x="105" y="263">USB, Wi-Fi radio</text>
+          <text class="s" x="210" y="39">browser, DNS on the clients</text>
+          <text class="s" x="210" y="85">TCP / UDP on the clients</text>
+          <text class="s" x="210" y="125">IP, routing, NAT, DHCP:</text><text class="s" x="210" y="141">phone / modem only</text>
+          <text class="b" x="210" y="178">L2 dispatcher works here</text><text class="s" x="210" y="197">copies frames enu2 &harr; wlan0, no IP</text>
+          <text class="s" x="210" y="244">USB 2.0 HS to the modem,</text><text class="s" x="210" y="263">802.11g radio to the clients</text>
+          <line class="ln ds" x1="20" y1="300" x2="540" y2="300"/>
+          <text class="s" x="20" y="320">The board touches layers 1 and 2 only. Everything above happens in the clients or the modem.</text>
+        </svg></div>
+      </div>
+      <div>
+        <p class="cap">Table 2-1: <span>Bridge, router and NAT router compared</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Property</th><th>L2 bridge / dispatcher</th><th>Router</th><th>NAT router</th></tr></thead>
+          <tbody>
+          <tr><td class="k">Decides by</td><td>MAC address</td><td>IP address</td><td>IP address + port</td></tr>
+          <tr><td class="k">Needs own IP</td><td>No</td><td>Yes, per side</td><td>Yes, per side</td></tr>
+          <tr><td class="k">Changes packets</td><td>No</td><td>TTL only</td><td>Source IP and port</td></tr>
+          <tr><td class="k">Broadcast</td><td>Forwarded</td><td>Stopped</td><td>Stopped</td></tr>
+          <tr><td class="k">Shares 1 public IP</td><td>No</td><td>No</td><td>Yes</td></tr>
+          <tr><td class="k">In this system</td><td>Board</td><td>&mdash;</td><td>Phone / modem</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">2.2</span>Ethernet frame</h3>
+    <p>Everything the dispatcher handles is one of these frames. It reads only the first 14 bytes (the header) and passes the rest unchanged. The preamble and the frame check sequence (FCS) are added and removed by the hardware, so a raw socket never sees them.</p>
+    <div>
+      <p class="cap">Figure 2-2: <span>Ethernet II frame as seen by <code>recvfrom()</code> on an AF_PACKET socket</span></p>
+      <div class="bytes">
+        <div class="byte sf"><b>Dest MAC</b><small>6 bytes</small></div>
+        <div class="byte sf"><b>Src MAC</b><small>6 bytes</small></div>
+        <div class="byte sf"><b>EtherType</b><small>2 bytes</small></div>
+        <div class="byte pl"><b>Payload</b><small>46 &ndash; 1500 bytes (IPv4, IPv6, ARP, EAPOL)</small></div>
+        <div class="byte"><b>FCS</b><small>4 B, removed by HW</small></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 2-2: <span>EtherTypes seen on this link</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>EtherType</th><th>Protocol</th><th>Dispatcher action</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">0x0800</td><td>IPv4 (incl. DHCP over UDP 67/68)</td><td>Forward</td></tr>
+          <tr><td class="mono">0x0806</td><td>ARP</td><td>Forward</td></tr>
+          <tr><td class="mono">0x86DD</td><td>IPv6 (incl. Neighbor Discovery, RA)</td><td>Forward</td></tr>
+          <tr><td class="mono">0x888E</td><td>EAPOL (Wi-Fi key handshake)</td><td>Keep on wlan0 side</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="cap">Table 2-3: <span>MAC address kinds</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Kind</th><th>Rule</th><th>Example</th></tr></thead>
+          <tbody>
+          <tr><td class="k">Unicast</td><td>Bit 0 of byte 0 = 0</td><td class="mono">08:a1:36:95:9f:9f</td></tr>
+          <tr><td class="k">Multicast</td><td>Bit 0 of byte 0 = 1</td><td class="mono">33:33:00:00:00:01</td></tr>
+          <tr><td class="k">Broadcast</td><td>All ones</td><td class="mono">ff:ff:ff:ff:ff:ff</td></tr>
+          <tr><td class="k">Locally administered</td><td>Bit 1 of byte 0 = 1</td><td>Phone's random RNDIS MAC</td></tr>
+          </tbody>
+        </table></div>
+        <p>The dispatcher uses the multicast bit test (<code>ether_dhost[0] &amp; 1</code>) to decide whether a frame from the modem is counted for one client or just forwarded.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">2.3</span>Why the modem must do NAT</h3>
+    <div class="grid2">
+      <div>
+        <p>The operator gives one public IPv4 address per SIM. Four clients need four addresses, so something must translate. NAT (network address translation) maps many private addresses to one public address by rewriting the source address and port of each outgoing packet and keeping a table to reverse it for the replies.</p>
+        <p>A Layer 2 device cannot do this, by definition: it does not touch IP headers. So NAT and DHCP must live in the modem, and the modem must support several hosts behind its USB link ("router mode"). This was risk 1 and risk 2 in the plan, and both passed with the phone.</p>
+        <div class="note"><strong>IPv6 needs no NAT</strong><p>The phone hands out a public /64 prefix. Each client builds its own global IPv6 address from it (SLAAC), so IPv6 works end to end through a pure Layer 2 path.</p></div>
+      </div>
+      <div>
+        <p class="cap">Figure 2-3: <span>Address view, one SIM and several clients</span></p>
+        <div class="fig"><svg viewBox="0 0 560 280" role="img" aria-label="NAT address view">
+          <defs><marker id="m23" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+          <rect class="gr" x="20" y="110" width="110" height="60"/><text class="c b" x="75" y="136">Internet</text><text class="c s" x="75" y="155">1 public IPv4</text>
+          <line class="ln" x1="130" y1="140" x2="190" y2="140" marker-start="url(#m23)" marker-end="url(#m23)"/>
+          <rect class="bx" x="190" y="100" width="130" height="80"/><text class="c b" x="255" y="128">Phone</text><text class="c s" x="255" y="147">NAT table</text><text class="c s m" x="255" y="165">192.168.56.11</text>
+          <line class="ln" x1="320" y1="140" x2="380" y2="140" marker-start="url(#m23)" marker-end="url(#m23)"/>
+          <rect class="hl" x="380" y="110" width="70" height="60"/><text class="c b" x="415" y="136">Board</text><text class="c s" x="415" y="155">no IP</text>
+          <line class="ln" x1="450" y1="140" x2="480" y2="50" marker-end="url(#m23)"/>
+          <line class="ln" x1="450" y1="140" x2="480" y2="140" marker-end="url(#m23)"/>
+          <line class="ln" x1="450" y1="140" x2="480" y2="230" marker-end="url(#m23)"/>
+          <rect class="bx" x="480" y="30" width="70" height="40"/><text class="c s m" x="515" y="55">.178</text>
+          <rect class="bx" x="480" y="120" width="70" height="40"/><text class="c s m" x="515" y="145">.x</text>
+          <rect class="bx" x="480" y="210" width="70" height="40"/><text class="c s m" x="515" y="235">.y</text>
+          <text class="c s" x="255" y="215">private subnet</text><text class="c s m" x="255" y="232">192.168.56.0/24</text>
+        </svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">2.4</span>DHCP and ARP across a Layer 2 device</h3>
+    <p>A new client has no address yet, so it shouts: DHCP Discover goes to the broadcast MAC <code>ff:ff:ff:ff:ff:ff</code>. The dispatcher forwards it to the phone, the phone's DHCP server answers, and the reply comes back the same way. ARP works the same way: "who has 192.168.56.11?" is a broadcast, the answer is unicast. If broadcast frames were dropped, no client could ever get an address.</p>
+    <div>
+      <p class="cap">Figure 2-4: <span>DHCP "DORA" exchange through the board</span></p>
+      <div class="fig"><svg viewBox="0 0 900 380" style="min-width:700px" role="img" aria-label="DHCP DORA sequence">
+        <defs>
+          <marker id="m24" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker>
+        </defs>
+        <rect class="bx" x="40" y="14" width="180" height="44"/><text class="c b" x="130" y="34">Wi-Fi client</text><text class="c s" x="130" y="50">no address yet</text>
+        <rect class="hl" x="360" y="14" width="180" height="44"/><text class="c b" x="450" y="34">Board (L2)</text><text class="c s" x="450" y="50">forwards, does not answer</text>
+        <rect class="bx" x="680" y="14" width="180" height="44"/><text class="c b" x="770" y="34">Phone DHCP server</text><text class="c s m" x="770" y="50">192.168.56.11</text>
+        <line class="ll" x1="130" y1="58" x2="130" y2="365"/><line class="ll" x1="450" y1="58" x2="450" y2="365"/><line class="ll" x1="770" y1="58" x2="770" y2="365"/>
+        <line class="ln" x1="130" y1="100" x2="450" y2="100" marker-end="url(#m24)"/><text class="c s" x="290" y="92">1 Discover (broadcast ff:ff:ff:ff:ff:ff)</text>
+        <line class="ln" x1="450" y1="116" x2="770" y2="116" marker-end="url(#m24)"/><text class="c s" x="610" y="108">forwarded unchanged</text>
+        <line class="ln" x1="770" y1="160" x2="450" y2="160" marker-end="url(#m24)"/><text class="c s" x="610" y="152">2 Offer: 192.168.56.178, lease 3599 s</text>
+        <line class="ln" x1="450" y1="176" x2="130" y2="176" marker-end="url(#m24)"/><text class="c s" x="290" y="168">forwarded unchanged</text>
+        <line class="ln" x1="130" y1="220" x2="450" y2="220" marker-end="url(#m24)"/><text class="c s" x="290" y="212">3 Request (broadcast): "I take .178"</text>
+        <line class="ln" x1="450" y1="236" x2="770" y2="236" marker-end="url(#m24)"/><text class="c s" x="610" y="228">forwarded unchanged</text>
+        <line class="ln" x1="770" y1="280" x2="450" y2="280" marker-end="url(#m24)"/><text class="c s" x="610" y="272">4 Ack: gateway and DNS .11</text>
+        <line class="ln" x1="450" y1="296" x2="130" y2="296" marker-end="url(#m24)"/><text class="c s" x="290" y="288">forwarded unchanged</text>
+        <rect class="nt" x="40" y="318" width="300" height="36"/><text class="c s" x="190" y="341">Client now ARPs for 192.168.56.11 (broadcast)</text>
+      </svg></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">2.5</span>A phone as a USB network card</h3>
+      <p>USB defines device classes. For networking, the phone or modem presents itself as an Ethernet adapter and carries whole Ethernet frames inside USB bulk transfers. Linux turns it into a normal interface (<code>usb0</code>, renamed <code>enu2</code>).</p>
+      <div class="tbl"><table>
+        <thead><tr><th>Class</th><th>Used by</th><th>Linux driver</th></tr></thead>
+        <tbody>
+        <tr><td class="k">RNDIS</td><td>Most Android phones (Realme, Samsung)</td><td><code>rndis_host</code></td></tr>
+        <tr><td class="k">CDC-ECM</td><td>Quectel EC25 (<code>AT+QCFG="usbnet",1</code>)</td><td><code>cdc_ether</code></td></tr>
+        <tr><td class="k">CDC-NCM</td><td>Newer phones and modems</td><td><code>cdc_ncm</code></td></tr>
+        <tr><td class="k">QMI / MBIM</td><td>Modems in raw-IP mode</td><td>Not used: no Ethernet header, no NAT</td></tr>
+        </tbody>
+      </table></div>
+      <p>All of them sit on <code>usbnet</code>. Data flows as bulk IN (<code>Bi</code>, phone to board) and bulk OUT (<code>Bo</code>, board to phone). An interrupt endpoint (<code>Ii</code>) tells the host that data is waiting.</p>
+    </div>
+    <div class="sec">
+      <h3><span class="n">2.6</span>Raw sockets and promiscuous mode</h3>
+      <p>An <code>AF_PACKET</code> socket bound with <code>ETH_P_ALL</code> receives every frame on one interface, header included, before the IP stack. The kernel marks each frame with a packet type:</p>
+      <div class="tbl"><table>
+        <thead><tr><th>sll_pkttype</th><th>Value</th><th>Meaning</th></tr></thead>
+        <tbody>
+        <tr><td class="mono">PACKET_HOST</td><td class="num">0</td><td>To this interface's MAC</td></tr>
+        <tr><td class="mono">PACKET_BROADCAST</td><td class="num">1</td><td>To everyone</td></tr>
+        <tr><td class="mono">PACKET_MULTICAST</td><td class="num">2</td><td>To a group</td></tr>
+        <tr><td class="mono">PACKET_OTHERHOST</td><td class="num">3</td><td>To another MAC (needs promiscuous mode)</td></tr>
+        <tr><td class="mono">PACKET_OUTGOING</td><td class="num">4</td><td>Sent by this host</td></tr>
+        </tbody>
+      </table></div>
+      <p>Frames from the phone are addressed to the clients' MACs, not to the board, so <code>enu2</code> must be promiscuous or they would be filtered out. <code>PACKET_IGNORE_OUTGOING</code> (socket option 23) stops the socket seeing its own transmits, which would otherwise loop forever between the two interfaces.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">2.7</span>Wi-Fi access point and the WPA2 handshake</h3>
+    <div class="grid2">
+      <div>
+        <p>In WPA2-PSK, the password never travels over the air. The access point and the client prove they both know it in a 4-message exchange carried in EAPOL frames (EtherType <code>0x888E</code>). The result is a per-client session key used to encrypt that client's traffic.</p>
+        <p>On this board, hostapd runs the access point side. The handshake belongs between the client and hostapd, so the dispatcher must keep EAPOL frames away from the modem. After the handshake, the WILC3000 decrypts frames and delivers plain Ethernet frames on <code>wlan0</code>.</p>
+        <div class="note"><strong>Client to client</strong><p>Two clients on the same AP talk through the access point itself, so their frames do not need to cross the dispatcher.</p></div>
+      </div>
+      <div>
+        <p class="cap">Figure 2-5: <span>4-way handshake between client and hostapd</span></p>
+        <div class="fig"><svg viewBox="0 0 500 300" role="img" aria-label="WPA2 4-way handshake">
+          <defs><marker id="m27" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+          <rect class="bx" x="20" y="14" width="150" height="40"/><text class="c b" x="95" y="39">Client</text>
+          <rect class="hl" x="330" y="14" width="150" height="40"/><text class="c b" x="405" y="39">hostapd (AP)</text>
+          <line class="ll" x1="95" y1="54" x2="95" y2="285"/><line class="ll" x1="405" y1="54" x2="405" y2="285"/>
+          <line class="ln" x1="405" y1="90" x2="95" y2="90" marker-end="url(#m27)"/><text class="c s" x="250" y="82">1 ANonce</text>
+          <line class="ln" x1="95" y1="140" x2="405" y2="140" marker-end="url(#m27)"/><text class="c s" x="250" y="132">2 SNonce + MIC</text>
+          <line class="ln" x1="405" y1="190" x2="95" y2="190" marker-end="url(#m27)"/><text class="c s" x="250" y="182">3 GTK (group key) + MIC</text>
+          <line class="ln" x1="95" y1="240" x2="405" y2="240" marker-end="url(#m27)"/><text class="c s" x="250" y="232">4 ACK</text>
+          <text class="c s" x="250" y="275">EAPOL-4WAY-HS-COMPLETED</text>
+        </svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">2.8</span>Throughput budget</h3>
+    <div>
+      <p class="cap">Table 2-4: <span>Each link in the data path and its limit</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Link</th><th>Raw rate</th><th>Usable (approx.)</th><th>Basis</th></tr></thead>
+        <tbody>
+        <tr><td class="k">USB 2.0 High-Speed (EHCI)</td><td class="num">480 Mbps</td><td>&gt; 100 Mbps</td><td>USB 2.0 spec; not the limit</td></tr>
+        <tr><td class="k">l2disp copy (user space)</td><td>&mdash;</td><td>CPU ~0 % at 13 Mbps</td><td>Measured with <code>top</code></td></tr>
+        <tr><td class="k">802.11g, 1 stream, 2.4 GHz</td><td class="num">54 Mbps</td><td>~20&ndash;25 Mbps shared</td><td>802.11g airtime overhead (estimate)</td></tr>
+        <tr><td class="k">Phone mobile link</td><td>varies</td><td>~12&ndash;13 Mbps here</td><td>fast.com, same through br0 and l2disp</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <p>The bridge and the dispatcher gave the same speed, so the limit is outside the board: most likely the phone's mobile link at the test location, with the shared Wi-Fi airtime as the next limit. The 4 clients share whichever is smaller.</p>
+  </div>
+</section>
+
+<!-- =================================================================== HARDWARE -->
+<section class="page" id="hardware" role="tabpanel" aria-label="Hardware" hidden>
+  <div class="intro"><h2>Hardware</h2><p>SAMA5D27-WLSOM1-EK1 evaluation kit with the WILC3000 Wi-Fi/BT module on the SOM, the USB-A host port for the modem, and the FT232 debug console.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Purpose</th><th>Theory</th><th>Implementation</th><th>Result</th></tr></thead>
+    <tbody><tr><td>Name the hardware the solution runs on and how the parts connect.</td><td>A USB host port supplies VBUS and talks to the modem; the Wi-Fi chip sits on SDIO.</td><td>SAMA5D27-WLSOM1-EK1, WILC3000 on SDIO, USB-A host port B, FT232 console.</td><td>All parts detected; USB-A host confirmed with PA10 out high.</td></tr></tbody>
+  </table></div>
+
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">3.1</span>Evaluation kit</h3>
+      <div>
+        <p class="cap">Figure 3-1: <span>SAMA5D27-WLSOM1-EK1</span></p>
+        <div class="photo"><img src="data:image/png;base64,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" alt="SAMA5D27-WLSOM1-EK1 evaluation kit with Wi-Fi antenna" width="256" height="219" style="max-width:320px"></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">3.2</span>Kit summary</h3>
+      <div>
+        <p class="cap">Table 3-1: <span>Read from the running board</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+          <tr><td class="k">CPU</td><td>SAMA5D27, ARM Cortex-A5 (<code>armv7l</code>)</td></tr>
+          <tr><td class="k">DDR</td><td><code>0x20000000</code>&ndash;<code>0x2FFFFFFF</code> (256 MB), MemTotal 245 436 kB</td></tr>
+          <tr><td class="k">CMA</td><td>16 MiB at <code>0x2F000000</code></td></tr>
+          <tr><td class="k">Wi-Fi</td><td>WILC3000, <code>wilc_sdio</code> on <code>mmc1</code>, SDIO 50 MHz, chip id <code>003000d0</code></td></tr>
+          <tr><td class="k">Wi-Fi firmware</td><td><code>wilc3000_wifi_firmware.bin</code> in <code>/lib/firmware</code> (BLE files also present)</td></tr>
+          <tr><td class="k">AP BSSID</td><td class="mono">f8:f0:05:47:c9:40</td></tr>
+          <tr><td class="k">Ethernet</td><td><code>eth0</code>, macb <code>f8008000</code>, Micrel KSZ8081, RMII, MAC <code>04:91:62:43:4f:df</code></td></tr>
+          <tr><td class="k">Console</td><td><code>ttyS0</code> 115200 8N1 &rarr; FT232 (<code>0403:6001</code>) &rarr; PC <code>/dev/ttyUSB0</code></td></tr>
+          <tr><td class="k">Boot media</td><td>microSD, 32 GB card (<code>mmcblk0</code>)</td></tr>
+          <tr><td class="k">Hostname</td><td class="mono">sama5d27-wlsom1-ek-sd</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">3.3</span>USB ports (device tree <code>at91-sama5d27_wlsom1_ek.dts</code>)</h3>
+    <div>
+      <p class="cap">Table 3-2: <span>USB controllers and connectors</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>DT node</th><th>Controller</th><th>Address</th><th>Role</th><th>VBUS</th><th>Use in this project</th></tr></thead>
+        <tbody>
+        <tr><td class="mono">&amp;usb0</td><td><code>atmel_usba_udc</code> (gadget)</td><td class="mono">0x00300000 FIFO, 0xFC02C000 regs</td><td>Device only</td><td><code>PA16</code> detect (input, reads high when powered)</td><td>Board power from PC or 65 W charger. A phone here is <b>not</b> detected</td></tr>
+        <tr><td class="mono">&amp;usb1</td><td><code>at91_ohci</code>, bus 2</td><td class="mono">0x00400000</td><td>Host, USB 1.1 (12 Mbps)</td><td><code>&lt;0, PA10, 0&gt;</code>, 3 ports</td><td>Companion. The phone lands here only after an EHCI crash</td></tr>
+        <tr><td class="mono">&amp;usb2</td><td><code>atmel-ehci</code>, bus 1</td><td class="mono">0x00500000, IRQ 159</td><td>Host, USB 2.0 (480 Mbps)</td><td>shared with usb1</td><td><b>Port B = USB-A connector</b> &rarr; phone / modem. Port C = HSIC (no connector)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note"><strong>VBUS check</strong><p><code>/sys/kernel/debug/gpio</code>: <code>gpio-10 (PA10 | atmel,vbus) out hi</code> (host port powered), <code>gpio-16 (PA16 | atmel,vbus) in hi</code> (device port sees 5 V). EHCI and OHCI share interrupt 159 (AIC5 line 41).</p></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">3.4</span>Network interfaces</h3>
+      <div>
+        <p class="cap">Table 3-3: <span>Interfaces in the final (dispatcher) setup</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Interface</th><th>Driver</th><th>Role</th><th>IP</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">enu2</td><td><code>rndis_host</code> + <code>cdc_ether</code> + <code>usbnet</code></td><td>Modem side. Kernel creates <code>usb0</code>, systemd renames it to <code>enu2</code></td><td>None</td></tr>
+          <tr><td class="mono">wlan0</td><td><code>wilc_sdio</code> + <code>cfg80211</code> (full-MAC, no mac80211)</td><td>AP side, run by hostapd</td><td>None</td></tr>
+          <tr><td class="mono">mon.wlan0</td><td>hostapd</td><td>Management frame monitor</td><td>&mdash;</td></tr>
+          <tr><td class="mono">eth0</td><td>macb</td><td>Optional management (DHCP via <code>eth.network</code>)</td><td>DHCP if cable plugged</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">3.5</span>Power</h3>
+      <div>
+        <p class="cap">Table 3-4: <span>Power sources tried</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Source</th><th>Result</th></tr></thead>
+          <tbody>
+          <tr><td class="k">PC USB port (device port)</td><td>Board runs. EHCI crash still happened (not the cause)</td></tr>
+          <tr><td class="k">Ambrane 65 W USB charger, 5 V</td><td>Board runs. Same crash before the fix. Used for all later tests</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="note warn"><strong>Phone and EC25 current</strong><p>The phone charges from the USB-A port. The planned EC25 has 1&ndash;2 A peaks. Use a powered USB hub for the EC25 (to verify on the bench).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== 3 LINUX IMAGE -->
+<section class="page" id="image" role="tabpanel" aria-label="Linux Image" hidden>
+  <div class="intro"><h2>Linux Image</h2><p>Microchip's 2025.10 headless Yocto image on microSD, with a rebuilt kernel that adds the USB network drivers, usbmon and a fixed boot command line.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Purpose</th><th>Theory</th><th>Implementation</th><th>Result</th></tr></thead>
+    <tbody><tr><td>Get a Linux system with the drivers the design needs.</td><td>U-Boot loads one FIT file; drivers are either built in or modules matching vermagic.</td><td>Microchip 2025.10 image, kernel rebuilt with USB network drivers built in.</td><td>Kernel #3 boots; RNDIS, ECM, NCM and usbmon available.</td></tr></tbody>
+  </table></div>
+
+
+  <div class="sec">
+    <h3><span class="n">4.1</span>Flashing the SD card</h3>
+    <pre><code># PC: image checked with bzip2 -tv (ok), card = /dev/sda (29.7G, RM=1)
+bzcat linux4microchip-oecore-sama5d27_wlsom1_ek-headless-2025.10.img.bz2 \
+  | sudo dd of=/dev/sda bs=4M status=progress conv=fsync
+# 730563584 bytes (731 MB) copied
+sync &amp;&amp; sudo eject /dev/sda</code></pre>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">4.2</span>SD card layout</h3>
+      <div>
+        <p class="cap">Table 4-1: <span>Partitions and boot files</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Partition</th><th>File</th><th>Size (B)</th></tr></thead>
+          <tbody>
+          <tr><td class="k">p1 <code>boot</code> (FAT, 21.1 MB)</td><td class="mono">BOOT.BIN</td><td class="num">22 937</td></tr>
+          <tr><td></td><td class="mono">u-boot.bin</td><td class="num">487 040</td></tr>
+          <tr><td></td><td class="mono">uboot.env (+ uboot.env.orig backup)</td><td class="num">16 384</td></tr>
+          <tr><td></td><td class="mono">sama5d27_wlsom1_ek.itb (rebuilt)</td><td class="num">6 002 508</td></tr>
+          <tr><td></td><td class="mono">sama5d27_wlsom1_ek.itb.orig (original)</td><td class="num">5 971 756</td></tr>
+          <tr><td class="k">p2 <code>root</code> (ext4, 675.7 MB)</td><td>Root filesystem, <code>/lib/modules/6.12.48-linux4microchip-2025.10</code></td><td></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">4.3</span>Boot chain</h3>
+      <div>
+        <p class="cap">Figure 4-1: <span>From power-on to services</span></p>
+        <div class="flow">
+          <div class="node"><b>BOOT.BIN</b><small>AT91Bootstrap</small></div><div class="link">SD</div>
+          <div class="node"><b>U-Boot</b><small>2025.07, bootdelay=1</small></div><div class="link">FIT</div>
+          <div class="node"><b>Kernel</b><small>0x22000000</small></div><div class="link">init</div>
+          <div class="node hl"><b>systemd</b><small>hostapd, l2disp</small></div>
+        </div>
+      </div>
+      <div>
+        <p class="cap">Table 4-2: <span>FIT image (<code>sama5d27_wlsom1_ek.its</code>)</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Image</th><th>Load address</th></tr></thead>
+          <tbody>
+          <tr><td class="k">FIT file loaded by U-Boot</td><td class="mono">0x24000000</td></tr>
+          <tr><td class="k">kernel (zImage, 5 932 896 B)</td><td class="mono">0x22000000 (entry)</td></tr>
+          <tr><td class="k">base_fdt (at91-sama5d27_wlsom1_ek.dtb)</td><td class="mono">0x23000000</td></tr>
+          <tr><td class="k">overlays (isc, ov7670, pda4, ...)</td><td class="mono">0x23100000+</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">4.4</span>U-Boot environment</h3>
+    <pre><code>bootcmd_boot=fatload mmc 0:1 0x24000000 sama5d27_wlsom1_ek.itb; bootm 0x24000000#kernel_dtb${at91_overlays_config}
+at91_prepare_bootargs=test -n $display_var &amp;&amp; setenv bootargs ${bootargs} ${at91_video_bootargs}
+
+# saved with saveenv ("Saving Environment to FAT... OK"):
+bootargs=console=ttyS0,115200 root=/dev/mmcblk0p2 rw rootfstype=ext4 rootwait atmel.pm_modes=standby,ulp1 rng_core.default_quality=700 cpuidle.off=1</code></pre>
+    <div class="note"><strong>Undo</strong><p>The original environment is on the boot partition as <code>uboot.env.orig</code>. Copy it over <code>uboot.env</code> to remove <code>cpuidle.off=1</code>.</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">4.5</span>Kernel configuration changes</h3>
+    <div>
+      <p class="cap">Table 4-3: <span>Board config (<code>/proc/config.gz</code>) vs rebuilt kernel</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Option</th><th>Original image</th><th>Rebuilt</th><th>Why</th></tr></thead>
+        <tbody>
+        <tr><td class="mono">CONFIG_USB_USBNET</td><td>not set</td><td><code>=y</code></td><td>Base for all USB network drivers</td></tr>
+        <tr><td class="mono">CONFIG_USB_NET_CDCETHER</td><td>not set</td><td><code>=y</code></td><td>Needed by <code>rndis_host</code>, and for EC25 ECM</td></tr>
+        <tr><td class="mono">CONFIG_USB_NET_RNDIS_HOST</td><td>not set</td><td><code>=y</code></td><td>Realme and Samsung tethering</td></tr>
+        <tr><td class="mono">CONFIG_USB_NET_CDC_NCM</td><td>not set</td><td><code>=y</code></td><td>Newer phones / modems</td></tr>
+        <tr><td class="mono">CONFIG_MII</td><td><code>=m</code></td><td><code>=y</code></td><td>Used by <code>usbnet</code></td></tr>
+        <tr><td class="mono">CONFIG_USB_MON</td><td>not set</td><td><code>=y</code></td><td>usbmon capture for the EHCI debug</td></tr>
+        <tr><td class="mono">CONFIG_BRIDGE</td><td><code>=m</code></td><td><code>=m</code></td><td>Step 5 bridge test</td></tr>
+        <tr><td class="mono">CONFIG_MODVERSIONS / MODULE_SIG</td><td>off</td><td>off</td><td>Out-of-tree modules load if vermagic matches</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">4.6</span>Kernel rebuild (PC)</h3>
+    <pre><code>git clone --depth 1 --branch linux4microchip-2025.10 https://github.com/linux4microchip/linux.git ~/l4m-linux
+cd ~/l4m-linux &amp;&amp; cp ~/L2_Dispatcher/board.config .config
+./scripts/config --file .config -e USB_USBNET -e USB_NET_CDC_ETHER -e USB_NET_RNDIS_HOST -e USB_NET_CDC_NCM -e USB_MON
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION= olddefconfig
+make ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf- LOCALVERSION= zImage dtbs -j8
+
+# FIT image: board's own .its, new zImage + dtb, original overlays
+cd ~/L2_Dispatcher/itb-build &amp;&amp; cp ~/l4m-linux/arch/arm/boot/zImage . \
+  &amp;&amp; mkimage -f sama5d27_wlsom1_ek.its sama5d27_wlsom1_ek.itb
+cp sama5d27_wlsom1_ek.itb /media/$USER/boot/</code></pre>
+    <div class="note warn"><strong>Leftover test patch</strong><p>The running kernel (#3, built 2026-11-02 19:45 IST) still contains a 2-line test in <code>drivers/net/usb/rndis_host.c</code> <code>rndis_bind()</code>: <code>set_bit(EVENT_NO_IP_ALIGN, &amp;dev-&gt;flags)</code>. It did not fix anything and is harmless. Remove it at the next rebuild (<code>git checkout drivers/net/usb/rndis_host.c</code>). Toolchain difference: board image built with <code>arm-mchp-linux-gnueabi-gcc 13.4.0</code>, rebuild with Ubuntu <code>arm-linux-gnueabihf-gcc 13.3.0</code>; no issue seen.</p></div>
+  </div>
+</section>
+
+<!-- =================================================================== 4 USB FIX -->
+<section class="page" id="usbfix" role="tabpanel" aria-label="USB Fix" hidden>
+  <div class="intro"><h2>EHCI Crash and Fix</h2><p>The SAMA5D2 USB 2.0 host controller died about 1 s after the phone's network interface came up. The cause was the at91 CPU idle state RAM_SR; booting with cpuidle.off=1 fixes it.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Purpose</th><th>Theory</th><th>Implementation</th><th>Result</th></tr></thead>
+    <tbody><tr><td>Make the USB 2.0 link to the modem stable.</td><td>EHCI moves data by DMA into DDR; DDR in power-down cannot serve it.</td><td>Kernel option cpuidle.off=1 saved in the U-Boot environment.</td><td>No HC died; 480 Mbps, DHCP and Internet through the phone.</td></tr></tbody>
+  </table></div>
+
+
+  <div class="sec">
+    <h3><span class="n">5.1</span>Background: EHCI, its companion, and DMA</h3>
+    <div class="grid2">
+      <div>
+        <p>A USB 2.0 host port on this chip has two controllers behind it. <b>EHCI</b> handles High-Speed devices (480 Mbps). <b>OHCI</b> is its companion for Full- and Low-Speed devices (12 / 1.5 Mbps). When a device connects, EHCI tries the High-Speed handshake. If that fails, or if EHCI is not running, it sets the <i>port owner</i> bit and the port goes to OHCI.</p>
+        <p>Neither controller copies data through the CPU. They read transfer descriptors and data buffers directly from DDR by <b>DMA</b>. If a DMA access fails, EHCI sets the Host System Error bit (<code>STS_FATAL</code>, USBSTS bit 4), halts, and Linux reports <code>fatal error</code> and <code>HC died</code>. It then routes every port to OHCI (CONFIGFLAG = 0).</p>
+        <p><b>cpuidle</b> picks a low-power state whenever the CPU has nothing to do. On SAMA5D2 the second state, <code>RAM_SR</code>, also puts the DDR controller into power-down until the CPU wakes. Bus masters such as EHCI are expected to wake it again, but here that did not work reliably: a USB DMA arriving in that window failed.</p>
+      </div>
+      <div>
+        <p class="cap">Figure 5-1: <span>Data path from the phone into DDR</span></p>
+        <div class="fig"><svg viewBox="0 0 520 330" role="img" aria-label="EHCI OHCI DMA path">
+          <defs><marker id="m50" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+          <rect class="bx" x="20" y="20" width="140" height="50"/><text class="c b" x="90" y="42">Phone</text><text class="c s" x="90" y="60">USB-A, port B</text>
+          <line class="ln" x1="90" y1="70" x2="90" y2="120" marker-end="url(#m50)"/>
+          <text class="s" x="100" y="100">port owner bit</text>
+          <rect class="hl" x="20" y="120" width="140" height="50"/><text class="c b" x="90" y="142">EHCI</text><text class="c s" x="90" y="160">480 Mbps</text>
+          <rect class="gr" x="200" y="120" width="140" height="50"/><text class="c b" x="270" y="142">OHCI</text><text class="c s" x="270" y="160">12 Mbps companion</text>
+          <line class="ln ds" x1="160" y1="145" x2="200" y2="145" marker-end="url(#m50)"/>
+          <line class="ln" x1="90" y1="170" x2="90" y2="230" marker-end="url(#m50)"/><text class="s" x="100" y="205">DMA write (RX data)</text>
+          <rect class="bx" x="20" y="230" width="320" height="50"/><text class="c b" x="180" y="252">DDR controller + 256 MB DDR</text><text class="c s" x="180" y="270">LPR register: power-down in RAM_SR</text>
+          <rect class="nt" x="370" y="230" width="135" height="50"/><text class="c s" x="437" y="252">CPU idle</text><text class="c s" x="437" y="270">at91_idle state1</text>
+          <line class="ln" x1="370" y1="255" x2="340" y2="255" marker-end="url(#m50)"/>
+          <rect class="er" x="370" y="120" width="135" height="50" rx="8"/><text class="c s" x="437" y="142">DMA fails &rarr;</text><text class="c s" x="437" y="160">STS_FATAL, HC died</text>
+          <line class="ln" x1="437" y1="230" x2="437" y2="170" marker-end="url(#m50)"/><text class="s" x="445" y="205">DMA in idle window</text>
+          <text class="s" x="20" y="315">Dashed = handoff to the companion after the crash</text>
+        </svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">5.2</span>Symptom</h3>
+    <pre><code>[    1.701403] usb 1-2: new high-speed USB device number 2 using atmel-ehci
+[   14.104847] rndis_host 1-2:1.0 enu2: renamed from usb0
+[   25.824988] atmel-ehci 500000.ehci: fatal error
+[   25.825048] atmel-ehci 500000.ehci: HC died; cleaning up
+[   26.527695] rndis_host 2-2:1.0 usb0: register 'rndis_host' at usb-at91-2, RNDIS device
+[   39.128644] rndis_host 2-2:1.0 enu2: NETDEV WATCHDOG: CPU: 0: transmit queue 0 timed out 5380 ms</code></pre>
+    <p>After the crash the phone falls back to OHCI (12 Mbps). There, 12 of 14 transmitted frames failed and DHCP got no answer. EHCI stays dead until reboot.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">5.3</span>EHCI registers after the crash</h3>
+      <div>
+        <p class="cap">Table 5-1: <span>Read with <code>devmem2</code> (base <code>0x00500000</code>)</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Register</th><th>Address</th><th>Value</th><th>Meaning</th></tr></thead>
+          <tbody>
+          <tr><td class="k">HCCAPBASE</td><td class="mono">0x00500000</td><td class="mono">0x01000010</td><td>CAPLENGTH 0x10, EHCI 1.00</td></tr>
+          <tr><td class="k">USBCMD</td><td class="mono">0x00500010</td><td class="mono">0x00010004</td><td>Run/Stop = 0 (stopped)</td></tr>
+          <tr><td class="k">USBSTS</td><td class="mono">0x00500014</td><td class="mono">0x0000F004</td><td>HCHalted = 1 (bit 12)</td></tr>
+          <tr><td class="k">CONFIGFLAG</td><td class="mono">0x00500050</td><td class="mono">0x00000000</td><td>All ports routed to OHCI</td></tr>
+          <tr><td class="k">PORTSC1 (A)</td><td class="mono">0x00500054</td><td class="mono">0x00003000</td><td>Empty, owner = companion</td></tr>
+          <tr><td class="k">PORTSC2 (B)</td><td class="mono">0x00500058</td><td class="mono">0x00003002</td><td>Phone connected, owner = companion</td></tr>
+          <tr><td class="k">PORTSC3 (C)</td><td class="mono">0x0050005C</td><td class="mono">0x00003000</td><td>HSIC, empty</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">5.4</span>usbmon capture at the crash</h3>
+      <div>
+        <p class="cap">Table 5-2: <span><code>/sys/kernel/debug/usb/usbmon/1u</code>, times in &micro;s</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Time</th><th>Event</th></tr></thead>
+          <tbody>
+          <tr><td class="num">479 815 819&ndash;479 817 203</td><td>~60 &times; <code>S Bi:1:003:1 -115 2048</code>: empty 2048 B receive buffers queued</td></tr>
+          <tr><td class="num">479 840 359</td><td><code>S/C Bo:1:003:1 134</code> and <code>130</code>: two TX frames sent OK</td></tr>
+          <tr><td class="num">479 843 906</td><td><code>C Ii:1:003:2 8 = 01000000</code>: phone signals "data available"</td></tr>
+          <tr><td class="num">479 954 232</td><td>Kernel: <code>fatal error</code>, <code>HC died</code></td></tr>
+          <tr><td class="num">479 954 624+</td><td>All <code>Bi</code> complete with <code>-108</code> (shut down), none was filled</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="note"><strong>Reading</strong><p>TX to the phone worked. The controller died when it had to write received data into RAM (DMA), which points to a memory access problem, not to the phone.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">5.5</span>Tests that narrowed it down</h3>
+    <div>
+      <p class="cap">Table 5-3: <span>Hypothesis &rarr; test &rarr; result</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>#</th><th>Hypothesis</th><th>Test</th><th>Result</th></tr></thead>
+        <tbody>
+        <tr><td class="k">1</td><td>Wrong port</td><td>Phone moved from device port to USB-A host port</td><td>Detected, but at 12 Mbps</td></tr>
+        <tr><td class="k">2</td><td>Bad cable</td><td>Same cable reaches 480 Mbps on the PC; second cable</td><td><span class="pill lo">Ruled out</span></td></tr>
+        <tr><td class="k">3</td><td>Weak power</td><td>PC USB vs 65 W charger</td><td><span class="pill lo">Ruled out</span></td></tr>
+        <tr><td class="k">4</td><td>Driver only, no traffic</td><td>Driver blacklisted, then loaded with <code>systemd-networkd</code> stopped, <code>enu2</code> down</td><td>No crash</td></tr>
+        <tr><td class="k">5</td><td>Traffic starts</td><td><code>ip link set enu2 up</code></td><td>Crash ~1 s later</td></tr>
+        <tr><td class="k">6</td><td>Module build mismatch</td><td>Drivers built into the kernel (<code>=y</code>)</td><td><span class="pill lo">Ruled out</span></td></tr>
+        <tr><td class="k">7</td><td>This phone only</td><td>Samsung Galaxy (<code>04e8:6863</code>, RNDIS)</td><td><span class="pill lo">Ruled out</span>, same crash</td></tr>
+        <tr><td class="k">8</td><td>RX buffer 2-byte offset</td><td><code>EVENT_NO_IP_ALIGN</code> patch</td><td><span class="pill lo">Ruled out</span></td></tr>
+        <tr><td class="k">9</td><td>Bad RAM region</td><td>One-time boot with <code>mem=128M</code></td><td><span class="pill lo">Ruled out</span></td></tr>
+        <tr><td class="k">10</td><td>CPU idle DDR power-down</td><td><code>echo 1 &gt; .../cpuidle/state1/disable</code> (live)</td><td>No crash</td></tr>
+        <tr><td class="k">11</td><td>Same, from boot</td><td>One-time boot with <code>cpuidle.off=1</code></td><td><span class="pill done">Fixed</span> DHCP + Internet</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">5.6</span>Root cause</h3>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 5-4: <span>cpuidle states before the fix (<code>at91_idle</code>)</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>State</th><th>Name</th><th>Description</th><th>Usage seen</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">state0</td><td class="mono">WFI</td><td>Wait for interrupt</td><td class="num">3716</td></tr>
+          <tr><td class="mono">state1</td><td class="mono">RAM_SR</td><td>"WFI and DDR Self Refresh"</td><td class="num">1403</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <pre><code>/* arch/arm/mach-at91/pm.c */
+static void sama5d3_ddr_standby(void)
+{
+    saved_lpr0 = at91_ramc_read(0, AT91_DDRSDRC_LPR);
+    lpr0 = saved_lpr0 &amp; ~AT91_DDRSDRC_LPCB;
+    lpr0 |= AT91_DDRSDRC_LPCB_POWER_DOWN;
+    at91_ramc_write(0, AT91_DDRSDRC_LPR, lpr0);
+    cpu_do_idle();
+    at91_ramc_write(0, AT91_DDRSDRC_LPR, saved_lpr0);
+}</code></pre>
+    </div>
+    <p>When the CPU idles in <code>RAM_SR</code>, the DDR controller is set to power-down. USB DMA that arrives in that window fails, and the kernel reports <code>fatal error</code> (EHCI Host System Error interrupt, <code>ehci-hcd.c</code>). With <code>cpuidle.off=1</code> the <code>at91_idle</code> driver is not loaded (<code>/sys/devices/system/cpu/cpuidle/current_driver</code> is missing).</p>
+    <div class="note warn"><strong>Workaround, not a final fix</strong><p>Idle power is probably somewhat higher (to verify). Report to Microchip as a possible SAMA5D2 erratum and ask for a fix that keeps <code>RAM_SR</code> (MCU Option tab, questions to Microchip).</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">5.7</span>Result after the fix</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Check</th><th>Result</th></tr></thead>
+      <tbody>
+      <tr><td class="k">USB link</td><td>Phone stays on Bus 001 (EHCI, 480 Mbps), no <code>HC died</code> across reboots</td></tr>
+      <tr><td class="k">DHCP from phone</td><td><code>lease of 192.168.56.88 obtained from 192.168.56.11, lease time 3599</code></td></tr>
+      <tr><td class="k">Internet</td><td><code>ping 8.8.8.8</code> 3/3, 34&ndash;47 ms. HTTP and DNS through the phone work</td></tr>
+      <tr><td class="k">Stress</td><td>200 &times; 1428 B frames to the phone, 0 % loss, rtt 0.914 / 1.181 / 2.401 ms</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- =================================================================== 5 PHONE & BRIDGE -->
+<section class="page" id="bridge" role="tabpanel" aria-label="Phone and Bridge" hidden>
+  <div class="intro"><h2>Phone and Bridge Test</h2><p>The phone was first checked on the PC, then used through the Linux kernel bridge br0 as a stand-in for the dispatcher. Both main risks (multiple leases, foreign source MACs) passed.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Purpose</th><th>Theory</th><th>Implementation</th><th>Result</th></tr></thead>
+    <tbody><tr><td>Prove the two plan risks before writing code.</td><td>A modem in router mode must give leases to many MACs and accept foreign source MACs.</td><td>macvlan test on the PC, then the Linux bridge br0 on the board.</td><td>3 clients with addresses from the phone, about 12 Mbps.</td></tr></tbody>
+  </table></div>
+
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">6.1</span>Phone facts</h3>
+      <div>
+        <p class="cap">Table 6-1: <span>Realme P1 Pro 5G, USB tethering</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+          <tr><td class="k">USB ID</td><td><code>22d9:2764</code> &rarr; <code>22d9:276a</code> when tethering starts</td></tr>
+          <tr><td class="k">Class</td><td>RNDIS (<code>rndis_host</code>)</td></tr>
+          <tr><td class="k">Subnet</td><td><code>192.168.56.0/24</code> (to verify: may change)</td></tr>
+          <tr><td class="k">Gateway / DHCP / NAT / DNS</td><td><code>192.168.56.11</code></td></tr>
+          <tr><td class="k">Lease</td><td>3599 s</td></tr>
+          <tr><td class="k">IPv6</td><td>Public /64 (<code>2409:40f2:...</code>), handed to clients</td></tr>
+          <tr><td class="k">Interface MAC</td><td>Random, changes every tethering start</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">6.2</span>Multi-MAC test on the PC</h3>
+      <pre><code>sudo nmcli connection add type macvlan con-name mvtest ifname mv0 \
+  dev enxae12db7d0d4f mode bridge tap no ipv4.method auto \
+  ipv4.route-metric 900 ipv6.method ignore
+ip addr show mv0               # got 192.168.56.98 (PC itself: .116)
+ping -I mv0 -c 3 192.168.56.11 # 3/3, ~3 ms
+ping -I mv0 -c 3 8.8.8.8       # 3/3, ~70 ms
+sudo nmcli connection delete mvtest</code></pre>
+      <div class="note"><strong>Result</strong><p>A second MAC got its own lease and Internet. The phone serves several hosts behind one USB link and accepts foreign source MACs.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">6.3</span>hostapd configuration</h3>
+    <div class="grid2">
+      <pre><code># /etc/hostapd.conf (dispatcher setup, no bridge= line)
+interface=wlan0
+driver=nl80211
+ctrl_interface=/var/run/hostapd
+country_code=IN
+ssid=L2_Dispatcher
+hw_mode=g
+channel=6
+wpa=2
+wpa_passphrase=test12345
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+max_num_sta=4</code></pre>
+      <div class="tbl"><table>
+        <thead><tr><th>File</th><th>Use</th></tr></thead>
+        <tbody>
+        <tr><td class="mono">/etc/hostapd.conf</td><td>Active, without <code>bridge=</code></td></tr>
+        <tr><td class="mono">/etc/hostapd-br.conf</td><td>Same plus <code>bridge=br0</code> (step 5)</td></tr>
+        <tr><td class="mono">/etc/hostapd.conf.orig</td><td>Image default (129 491 B)</td></tr>
+        <tr><td class="mono">/root/hostapd-l2.conf</td><td>First step 3 test</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <p>Log on join: <code>AP-STA-CONNECTED</code>, <code>WPA: pairwise key handshake completed (RSN)</code>, <code>EAPOL-4WAY-HS-COMPLETED</code>. A wrong password shows <code>AP-STA-POSSIBLE-PSK-MISMATCH</code>. <code>country_code=IN</code> was accepted (<code>COUNTRY_UPDATE-&gt;ENABLED</code>).</p>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">6.4</span>Bridge test (step 5)</h3>
+    <div>
+      <p class="cap">Table 6-2: <span><code>br0</code> = <code>enu2</code> + <code>wlan0</code>, board without IP</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Check</th><th>Result</th></tr></thead>
+        <tbody>
+        <tr><td class="k">Bridge ports</td><td><code>wlan0</code> and <code>enu2</code> <code>master br0 state forwarding</code></td></tr>
+        <tr><td class="k">Client 1</td><td>MAC <code>08:a1:36:95:9f:9f</code>, IPv4 <code>192.168.56.178</code> from the phone, public IPv6 <code>2409:40f2:101a:fa57:...</code></td></tr>
+        <tr><td class="k">FDB</td><td>Client on <code>wlan0</code>, phone <code>92:ef:fc:71:6f:7e</code> on <code>enu2</code></td></tr>
+        <tr><td class="k">Traffic</td><td><code>enu2</code> RX 2.2 MB / TX 1.0 MB, HTTPS (443) and DNS (53) seen</td></tr>
+        <tr><td class="k">Clients at once</td><td>3 devices, all with Internet (user test)</td></tr>
+        <tr><td class="k">Speed</td><td>~12 Mbps (fast.com)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">6.5</span>Phone after a board reboot</h3>
+    <div class="note warn"><strong>Phone stops accepting data</strong><p>If the phone stays plugged in while the board reboots, TX gets stuck and DHCP fails (no crash). Software re-plug (<code>authorized</code> 0/1 on <code>1-2</code> or <code>usb1</code>, <code>usb1-port2/disable</code>) does not help.</p></div>
+    <div class="flow">
+      <div class="node"><b>Boot board</b><small>phone unplugged</small></div><div class="link">~1 min</div>
+      <div class="node"><b>Plug phone</b><small>USB-A port</small></div><div class="link">phone</div>
+      <div class="node hl"><b>Tethering on</b><small>Internet for clients</small></div>
+    </div>
+    <p>Recovery if stuck: tethering off &rarr; unplug &rarr; plug &rarr; tethering on. Confirmed by the user on 2026-11-03.</p>
+  </div>
+</section>
+
+<!-- =================================================================== 6 DISPATCHER -->
+<section class="page" id="dispatcher" role="tabpanel" aria-label="Dispatcher" hidden>
+  <div class="intro"><h2>L2 Dispatcher (l2disp)</h2><p>A single-threaded C program that opens one AF_PACKET raw socket per interface and copies every Ethernet frame to the other side, except the Wi-Fi handshake, which stays with hostapd.</p></div>
+  <div class="tbl"><table>
+    <thead><tr><th>Purpose</th><th>Theory</th><th>Implementation</th><th>Result</th></tr></thead>
+    <tbody><tr><td>Replace the kernel bridge with a small program we control.</td><td>Two raw sockets see whole frames; forwarding both ways is a Layer 2 bridge with two ports.</td><td>l2disp: poll() loop, EAPOL filter, reconnect, per-client counters.</td><td>Same result as br0, about 13 Mbps, starts at boot.</td></tr></tbody>
+  </table></div>
+
+
+  <div class="sec">
+    <h3><span class="n">7.1</span>Software layers</h3>
+    <div>
+      <p class="cap">Figure 7-1: <span>Where l2disp sits</span></p>
+      <div class="layers">
+        <div class="layer"><div class="lname">User space</div><div class="cells">
+          <div class="cell"><b>hostapd</b><small>AP, WPA2, EAPOL</small></div>
+          <div class="cell"><b>l2disp</b><small>/usr/sbin/l2disp</small></div>
+          <div class="cell"><b>systemd-networkd</b><small>no IP on enu2 / wlan0</small></div>
+        </div></div>
+        <div class="layer"><div class="lname">Kernel</div><div class="cells">
+          <div class="cell"><b>AF_PACKET</b><small>ETH_P_ALL, PACKET_IGNORE_OUTGOING</small></div>
+          <div class="cell"><b>cfg80211 + wilc_sdio</b><small>wlan0</small></div>
+          <div class="cell"><b>usbnet + rndis_host</b><small>enu2 (built-in)</small></div>
+          <div class="cell"><b>ehci-atmel</b><small>500000.ehci</small></div>
+        </div></div>
+        <div class="layer hw"><div class="lname">Hardware</div><div class="cells">
+          <div class="cell"><b>WILC3000</b><small>SDIO 50 MHz</small></div>
+          <div class="cell"><b>UHPHS port B</b><small>USB-A, 480 Mbps</small></div>
+          <div class="cell"><b>DDR 256 MB</b><small>cpuidle off</small></div>
+          <div class="cell"><b>SAMA5D27</b><small>Cortex-A5</small></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">7.2</span>Design reasoning</h3>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 7-1: <span>Choices and the reason for each</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Choice</th><th>Reason</th></tr></thead>
+          <tbody>
+          <tr><td class="k">User space, not a kernel module</td><td>Easy to debug and update, no kernel rebuild; CPU load is ~0 % at the measured rate</td></tr>
+          <tr><td class="k">AF_PACKET, ETH_P_ALL</td><td>Sees every frame with its header, before the IP stack; no IP needed on the interface</td></tr>
+          <tr><td class="k">One poll() loop, one thread</td><td>Only two file descriptors; no locking; frame order kept per direction</td></tr>
+          <tr><td class="k">No MAC learning table</td><td>Only two ports: every frame from one side goes to the other, so there is nothing to decide</td></tr>
+          <tr><td class="k">Promiscuous on enu2 only</td><td>Frames from the modem carry client MACs; on wlan0 the AP already delivers client frames</td></tr>
+          <tr><td class="k">EAPOL kept local</td><td>The WPA2 handshake is between client and hostapd (Concepts tab, 2.7)</td></tr>
+          <tr><td class="k">Static binary</td><td>No dependency on the board's C library version</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="cap">Figure 7-2: <span>Why a raw-socket forwarder can loop, and the fix</span></p>
+        <div class="fig"><svg viewBox="0 0 560 300" role="img" aria-label="Forwarding loop">
+          <defs><marker id="m70" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+          <rect class="bx" x="20" y="40" width="130" height="50"/><text class="c b" x="85" y="62">enu2 socket</text><text class="c s" x="85" y="80">modem side</text>
+          <rect class="bx" x="410" y="40" width="130" height="50"/><text class="c b" x="475" y="62">wlan0 socket</text><text class="c s" x="475" y="80">AP side</text>
+          <line class="ln" x1="150" y1="65" x2="410" y2="65" marker-end="url(#m70)"/><text class="c s" x="280" y="56">1 frame forwarded: send() on wlan0</text>
+          <path class="ln ds" d="M475,90 V130 H85 V90" marker-end="url(#m70)"/>
+          <text class="c s" x="280" y="122">2 the wlan0 socket also sees its own send</text>
+          <text class="c s" x="280" y="152">3 without a filter it goes back to enu2, and again, forever</text>
+          <rect class="nt" x="60" y="186" width="440" height="80"/>
+          <text class="c b" x="280" y="210">Fix in l2disp</text>
+          <text class="c s" x="280" y="232">setsockopt(SOL_PACKET, PACKET_IGNORE_OUTGOING, 1)</text>
+          <text class="c s" x="280" y="252">fallback: skip frames with sll_pkttype == PACKET_OUTGOING</text>
+        </svg></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">7.3</span>Design rules in the code</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Rule</th><th>How (src/l2disp.c)</th></tr></thead>
+      <tbody>
+      <tr><td class="k">No loops</td><td><code>setsockopt(SOL_PACKET, PACKET_IGNORE_OUTGOING)</code>; fallback: skip <code>sll_pkttype == PACKET_OUTGOING</code></td></tr>
+      <tr><td class="k">EAPOL stays local</td><td>Frames from <code>wlan0</code> with EtherType <code>0x888E</code> &rarr; <code>drop_eapol++</code></td></tr>
+      <tr><td class="k">Modem side sees client MACs</td><td><code>PACKET_ADD_MEMBERSHIP</code> / <code>PACKET_MR_PROMISC</code> on <code>enu2</code> only</td></tr>
+      <tr><td class="k">No IP on data interfaces</td><td>Writes <code>1</code> to <code>/proc/sys/net/ipv6/conf/&lt;if&gt;/disable_ipv6</code>; sets <code>IFF_UP</code> only</td></tr>
+      <tr><td class="k">Phone unplug / replug</td><td><code>ENETDOWN</code>/<code>ENXIO</code>/<code>ENODEV</code> or <code>POLLERR</code>/<code>POLLHUP</code>/<code>POLLNVAL</code> &rarr; <code>close_port()</code>; reopen every 2 s</td></tr>
+      <tr><td class="k">Oversized frames</td><td><code>recvfrom(..., MSG_TRUNC)</code>; length &gt; 2048 &rarr; <code>drop_big++</code>; &lt; 14 B &rarr; <code>drop_other++</code></td></tr>
+      <tr><td class="k">Optional allow-list</td><td>Any <code>allow =</code> line enables it; other client MACs &rarr; <code>drop_denied++</code></td></tr>
+      <tr><td class="k">Broadcast / multicast</td><td>Forwarded unchanged (DHCP, ARP, IPv6 ND)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sec">
+      <h3><span class="n">7.4</span>Frame handling flowchart</h3>
+      <div>
+        <p class="cap">Figure 7-3: <span><code>handle_frame(in)</code></span></p>
+        <div class="fig"><svg viewBox="0 0 770 910" style="max-width:820px;margin:0 auto" role="img" aria-label="handle_frame flowchart">
+          <defs><marker id="m62" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+          <rect class="bx" x="110" y="16" width="240" height="40" rx="20"/><text class="c" x="230" y="41">Frame ready (POLLIN)</text>
+          <line class="ln" x1="230" y1="56" x2="230" y2="86" marker-end="url(#m62)"/>
+          <rect class="bx" x="110" y="86" width="240" height="40"/><text class="c" x="230" y="111">recvfrom() into 2048 B buffer</text>
+          <line class="ln" x1="230" y1="126" x2="230" y2="156" marker-end="url(#m62)"/>
+          <polygon class="bx" points="230,156 330,196 230,236 130,196"/><text class="c" x="230" y="200">recv error?</text>
+          <line class="ln" x1="330" y1="196" x2="480" y2="196" marker-end="url(#m62)"/><text class="c s" x="405" y="188">Yes</text>
+          <rect class="er" x="480" y="172" width="270" height="48" rx="8"/><text class="c s" x="615" y="192">ENETDOWN / ENXIO / ENODEV:</text><text class="c s" x="615" y="210">close_port(), reopen every 2 s</text>
+          <line class="ln" x1="230" y1="236" x2="230" y2="266" marker-end="url(#m62)"/><text class="s" x="240" y="256">No</text>
+          <polygon class="bx" points="230,266 330,306 230,346 130,306"/><text class="c s" x="230" y="310">PACKET_OUTGOING?</text>
+          <line class="ln" x1="330" y1="306" x2="480" y2="306" marker-end="url(#m62)"/><text class="c s" x="405" y="298">Yes</text>
+          <rect class="gr" x="480" y="286" width="270" height="40"/><text class="c s" x="615" y="311">Ignore (our own transmit)</text>
+          <line class="ln" x1="230" y1="346" x2="230" y2="376" marker-end="url(#m62)"/><text class="s" x="240" y="366">No</text>
+          <polygon class="bx" points="230,376 330,416 230,456 130,416"/><text class="c s" x="230" y="412">len &gt; 2048</text><text class="c s" x="230" y="428">or &lt; 14 B?</text>
+          <line class="ln" x1="330" y1="416" x2="480" y2="416" marker-end="url(#m62)"/><text class="c s" x="405" y="408">Yes</text>
+          <rect class="gr" x="480" y="396" width="270" height="40"/><text class="c s" x="615" y="421">drop_big++ / drop_other++</text>
+          <line class="ln" x1="230" y1="456" x2="230" y2="486" marker-end="url(#m62)"/><text class="s" x="240" y="476">No</text>
+          <polygon class="bx" points="230,486 330,526 230,566 130,526"/><text class="c s" x="230" y="530">From wlan0?</text>
+          <line class="ln" x1="330" y1="526" x2="480" y2="526" marker-end="url(#m62)"/><text class="c s" x="405" y="518">Yes</text>
+          <rect class="bx" x="480" y="496" width="270" height="60"/><text class="c s" x="615" y="516">EtherType 0x888E &rarr; drop_eapol++</text><text class="c s" x="615" y="532">allow-list miss &rarr; drop_denied++</text><text class="c s" x="615" y="548">else client up_pkts / up_bytes</text>
+          <line class="ln" x1="230" y1="566" x2="230" y2="596" marker-end="url(#m62)"/><text class="s" x="240" y="586">No (from enu2)</text>
+          <rect class="bx" x="110" y="596" width="240" height="48"/><text class="c s" x="230" y="616">Unicast to known client:</text><text class="c s" x="230" y="634">down_pkts / down_bytes</text>
+          <line class="ln" x1="230" y1="644" x2="230" y2="674" marker-end="url(#m62)"/>
+          <path class="ln" d="M615,556 V694 H350" marker-end="url(#m62)"/>
+          <rect class="bx" x="110" y="674" width="240" height="40"/><text class="c" x="230" y="699">send() on the other port</text>
+          <line class="ln" x1="230" y1="714" x2="230" y2="744" marker-end="url(#m62)"/>
+          <polygon class="bx" points="230,744 330,784 230,824 130,784"/><text class="c" x="230" y="788">send() OK?</text>
+          <line class="ln" x1="330" y1="784" x2="480" y2="784" marker-end="url(#m62)"/><text class="c s" x="405" y="776">No</text>
+          <rect class="er" x="480" y="760" width="270" height="48" rx="8"/><text class="c s" x="615" y="780">tx_errs++, client drops++</text><text class="c s" x="615" y="798">iface gone &rarr; close_port()</text>
+          <line class="ln" x1="230" y1="824" x2="230" y2="854" marker-end="url(#m62)"/><text class="s" x="240" y="844">Yes</text>
+          <rect class="bx" x="110" y="854" width="240" height="40" rx="20"/><text class="c" x="230" y="879">tx_pkts++, back to poll()</text>
+        </svg></div>
+        <div class="legend"><span>&#9645; Rounded = start/end</span><span>&#9645; Rectangle = process</span><span>&#9671; Diamond = decision</span><span>Grey = frame dropped</span><span>Red = error path</span></div>
+      </div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">7.5</span>Constants and signals</h3>
+      <div>
+        <p class="cap">Table 7-2: <span>Compile-time constants</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Name</th><th>Value</th><th>Use</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">MAX_FRAME</td><td class="num">2048</td><td>RX buffer, &gt; 1514 + VLAN tag</td></tr>
+          <tr><td class="mono">MAX_CLIENTS</td><td class="num">16</td><td>Counter / allow-list table</td></tr>
+          <tr><td class="mono">STATS_INTERVAL</td><td class="num">60 s</td><td>Counters to log</td></tr>
+          <tr><td class="mono">RETRY_SECONDS</td><td class="num">2 s</td><td>Reopen missing interface</td></tr>
+          <tr><td class="mono">ETH_P_EAPOL</td><td class="mono">0x888E</td><td>Not forwarded to modem</td></tr>
+          <tr><td>poll() timeout</td><td class="num">1000 ms</td><td>Retry and stats timing</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="cap">Table 7-3: <span>Signals</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Signal</th><th>Action</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">SIGUSR1</td><td>Write counters to the log now</td></tr>
+          <tr><td class="mono">SIGINT / SIGTERM</td><td>Final counters, close sockets, exit 0</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">7.6</span>Functions</h3>
+      <div>
+        <p class="cap">Table 7-4: <span>Functions</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Function</th><th>Job</th></tr></thead>
+          <tbody>
+          <tr><td class="mono">load_config()</td><td>Parse <code>modem_if</code>, <code>ap_if</code>, <code>allow</code></td></tr>
+          <tr><td class="mono">open_port()</td><td>Socket, bind, IPv6 off, up, promisc</td></tr>
+          <tr><td class="mono">handle_frame()</td><td>Receive, filter, count, forward</td></tr>
+          <tr><td class="mono">find_client()</td><td>Per-MAC entry (create on first frame from wlan0)</td></tr>
+          <tr><td class="mono">log_stats()</td><td>Port, drop and client counters</td></tr>
+          <tr><td class="mono">close_port()</td><td>Close fd, mark missing</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">7.7</span>DHCP through the dispatcher</h3>
+    <div>
+      <p class="cap">Figure 7-4: <span>Client reconnect after <code>hostapd_cli deauthenticate</code>, as captured</span></p>
+      <div class="fig"><svg viewBox="0 0 970 470" style="min-width:760px" role="img" aria-label="DHCP sequence through l2disp">
+        <defs>
+          <marker id="m63" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker>
+          <marker id="m63o" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#000" stroke-width="1.4"/></marker>
+        </defs>
+        <rect class="bx" x="20" y="16" width="180" height="46"/><text class="c b" x="110" y="36">Wi-Fi client</text><text class="c s m" x="110" y="53">08:a1:36:95:9f:9f</text>
+        <rect class="bx" x="270" y="16" width="180" height="46"/><text class="c b" x="360" y="36">hostapd</text><text class="c s" x="360" y="53">wlan0</text>
+        <rect class="hl" x="520" y="16" width="180" height="46"/><text class="c b" x="610" y="36">l2disp</text><text class="c s" x="610" y="53">wlan0 + enu2 sockets</text>
+        <rect class="bx" x="770" y="16" width="180" height="46"/><text class="c b" x="860" y="36">Phone</text><text class="c s" x="860" y="53">192.168.56.11</text>
+        <line class="ll" x1="110" y1="62" x2="110" y2="455"/><line class="ll" x1="360" y1="62" x2="360" y2="455"/>
+        <line class="ll" x1="610" y1="62" x2="610" y2="455"/><line class="ll" x1="860" y1="62" x2="860" y2="455"/>
+        <line class="ln" x1="110" y1="104" x2="360" y2="104" marker-end="url(#m63)"/><text class="c s" x="235" y="96">associate, WPA2 4-way handshake</text>
+        <line class="ln ds" x1="360" y1="136" x2="110" y2="136" marker-end="url(#m63o)"/><text class="c s" x="235" y="128">EAPOL-4WAY-HS-COMPLETED</text>
+        <rect class="nt" x="525" y="92" width="170" height="44"/><text class="c s" x="610" y="110">EAPOL seen on wlan0:</text><text class="c s" x="610" y="127">dropped (eapol=2)</text>
+        <line class="ln" x1="110" y1="186" x2="610" y2="186" marker-end="url(#m63)"/><text class="c s" x="485" y="178">DHCP Request, 0.0.0.0 &rarr; 255.255.255.255</text>
+        <line class="ln" x1="610" y1="222" x2="860" y2="222" marker-end="url(#m63)"/><text class="c s" x="735" y="214">send() on enu2</text>
+        <line class="ln" x1="860" y1="272" x2="610" y2="272" marker-end="url(#m63)"/><text class="c s" x="735" y="264">DHCP Reply</text>
+        <line class="ln" x1="610" y1="308" x2="110" y2="308" marker-end="url(#m63)"/><text class="c s" x="485" y="300">send() on wlan0: 192.168.56.178</text>
+        <rect class="fr" x="40" y="346" width="900" height="100"/>
+        <polygon class="gr" points="40,346 160,346 160,360 150,370 40,370"/><text class="s" x="48" y="363">loop [traffic]</text>
+        <line class="ln" x1="110" y1="392" x2="860" y2="392" marker-end="url(#m63)"/><text class="c s" x="485" y="384">frames client &rarr; phone (up_pkts)</text>
+        <line class="ln" x1="860" y1="428" x2="110" y2="428" marker-end="url(#m63)"/><text class="c s" x="485" y="420">frames phone &rarr; client (down_pkts)</text>
+      </svg></div>
+      <div class="legend"><span>Solid arrow = frame / message</span><span>Dashed arrow = result</span><span>Yellow box = local action</span><span>Frame = loop fragment</span></div>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">7.8</span>Configuration</h3>
+      <pre><code># /etc/l2disp.conf
+modem_if = enu2      # phone (Realme); EC25 later
+ap_if    = wlan0     # hostapd AP
+#allow   = 08:a1:36:95:9f:9f   # any allow line enables the list</code></pre>
+      <pre><code># /etc/systemd/system/l2disp.service
+[Unit]
+Description=L2 dispatcher (modem &lt;-&gt; Wi-Fi AP, raw Ethernet frames)
+After=hostapd.service
+Wants=hostapd.service
+
+[Service]
+ExecStart=/usr/sbin/l2disp -c /etc/l2disp.conf
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+    </div>
+    <div class="sec">
+      <h3><span class="n">7.9</span>Log output</h3>
+      <pre><code>l2disp: modem=enu2 ap=wlan0 allow-list=off
+enu2: opened (ifindex 7, promisc)
+wlan0: opened (ifindex 4)
+enu2: socket error, reopening        # phone unplugged
+enu2: opened (ifindex 8, promisc)
+stats: enu2 rx=27918 tx=17751 txerr=0 | wlan0 rx=17899 tx=27918 txerr=0
+drops: eapol=6 denied=0 toobig=0 other=142
+  client 08:a1:36:95:9f:9f up=17893/5319501B down=27739/22758227B drops=0</code></pre>
+      <p>Read the log with <code>journalctl -u l2disp</code>. Ask for counters with <code>kill -USR1 $(pidof l2disp)</code>.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">7.10</span>Dispatcher test results</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Test</th><th>Result</th><th>Status</th></tr></thead>
+      <tbody>
+      <tr><td class="k">DHCP through l2disp</td><td>Client got <code>192.168.56.178</code> from <code>192.168.56.11</code></td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">Traffic</td><td>2417 frames up, 2434 down after ~30 s, 0 tx errors</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">EAPOL filter</td><td><code>eapol=2</code> on reconnect, handshake OK</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">Phone replug</td><td>Reopened <code>enu2</code> by itself; <code>other=142</code> = frames while unplugged</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">Speed</td><td>~13 Mbps (l2disp) vs ~12 Mbps (br0), same client</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">CPU</td><td><code>top</code>: 0.0 %, 7.8 s total CPU after the speed test</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">Starts at boot</td><td>hostapd + l2disp active, no <code>br0</code>, no IP on data path</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">3&ndash;4 clients via l2disp</td><td>Not yet measured (bridge test passed with 3)</td><td><span class="pill open">Open</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- =================================================================== 7 TOOLS & BUILD -->
+<section class="page" id="tools" role="tabpanel" aria-label="Tools and Build" hidden>
+  <div class="intro"><h2>Tools and Reference</h2><p>How the dispatcher is built and installed, the console helpers, every configuration file on the board, a command collection for daily use, and a glossary.</p></div>
+
+  <div class="sec">
+    <h3><span class="n">8.1</span>Project files on the PC</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Path (~/L2_Dispatcher/)</th><th>Content</th></tr></thead>
+      <tbody>
+      <tr><td class="mono">CLAUDE.md</td><td>Project context, decisions, results</td></tr>
+      <tr><td class="mono">src/l2disp.c</td><td>Dispatcher source</td></tr>
+      <tr><td class="mono">src/Makefile</td><td>ARM static build + <code>make host</code> compile check</td></tr>
+      <tr><td class="mono">src/l2disp.conf, src/l2disp.service</td><td>Board config and systemd unit</td></tr>
+      <tr><td class="mono">tools/board.py</td><td>Run one shell command on the board, print output</td></tr>
+      <tr><td class="mono">tools/uboot.py</td><td>Reboot into U-Boot, run commands, optionally <code>boot</code></td></tr>
+      <tr><td class="mono">tools/push.py</td><td>Copy a file to the board (base64 chunks, md5 check)</td></tr>
+      <tr><td class="mono">board.config</td><td>Board kernel config (from <code>/proc/config.gz</code>)</td></tr>
+      <tr><td class="mono">itb-build/</td><td>FIT inputs: <code>.its</code>, zImage, dtb, overlays</td></tr>
+      <tr><td class="mono">~/l4m-linux/</td><td>Kernel source, tag <code>linux4microchip-2025.10</code></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">8.2</span>Build and install l2disp</h3>
+      <pre><code>cd ~/L2_Dispatcher/src
+make host        # gcc compile check on the PC
+make             # arm-linux-gnueabihf-gcc -O2 -Wall -Wextra
+                 #   -std=gnu11 -static -s  -&gt; l2disp
+cd ../tools
+python3 -I push.py ../src/l2disp /usr/sbin/l2disp.new   # ~65 s
+python3 -I board.py "chmod +x /usr/sbin/l2disp.new; \
+  mv /usr/sbin/l2disp.new /usr/sbin/l2disp; systemctl restart l2disp"</code></pre>
+      <div class="note"><strong>Toolchain</strong><p><code>gcc-arm-linux-gnueabihf</code> 13.2 package (gcc 13.3.0), <code>libc6-dev-armhf-cross</code> 2.39 for the static <code>libc.a</code>. Output: ELF 32-bit ARM EABI5, statically linked, stripped.</p></div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">8.3</span>Console helpers</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Command</th><th>What it does</th></tr></thead>
+        <tbody>
+        <tr><td class="mono">board.py "cmd" [timeout]</td><td>Logs in as root if needed, runs <code>cmd</code>, waits for an end marker</td></tr>
+        <tr><td class="mono">uboot.py "c1" "c2" "boot"</td><td>Sends <code>reboot</code>, presses keys until <code>=&gt;</code>, runs commands; nothing saved unless <code>saveenv</code></td></tr>
+        <tr><td class="mono">push.py local remote</td><td><code>stty -echo</code>, 3040-char base64 lines, <code>base64 -d</code>, compares md5</td></tr>
+        </tbody>
+      </table></div>
+      <div class="note warn"><strong>Before using them</strong><p><code>sudo chmod a+rw /dev/ttyUSB0</code> (until replug), and close picocom (Ctrl+A, Ctrl+X). Only one program can hold the port.</p></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">8.4</span>Board configuration (dispatcher at boot)</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>File on the board</th><th>Content / purpose</th></tr></thead>
+      <tbody>
+      <tr><td class="mono">/usr/sbin/l2disp</td><td>Dispatcher binary</td></tr>
+      <tr><td class="mono">/etc/l2disp.conf</td><td><code>modem_if = enu2</code>, <code>ap_if = wlan0</code></td></tr>
+      <tr><td class="mono">/etc/systemd/system/l2disp.service</td><td>Enabled, after <code>hostapd.service</code></td></tr>
+      <tr><td class="mono">/etc/hostapd.conf</td><td>AP without <code>bridge=</code>; <code>hostapd.service</code> enabled</td></tr>
+      <tr><td class="mono">/etc/systemd/network/10-enu2.network</td><td><code>Name=enu* usb*</code>, <code>DHCP=no</code>, <code>LinkLocalAddressing=no</code>, <code>IPv6AcceptRA=no</code>, <code>RequiredForOnline=no</code></td></tr>
+      <tr><td class="mono">/etc/systemd/network/10-wlan0.network</td><td>Same for <code>wlan0</code> (stops <code>80-wired.network</code> DHCP)</td></tr>
+      <tr><td class="mono">/etc/systemd/network/disabled-br0/</td><td>Bridge files <code>10-br0.netdev</code>, <code>10-br0.network</code>, old <code>10-enu2.network</code></td></tr>
+      <tr><td class="mono">/etc/sysctl.d/90-l2.conf</td><td><code>net.ipv6.conf.wlan0.disable_ipv6=1</code></td></tr>
+      <tr><td class="mono">/etc/modules-load.d/bridge.conf</td><td><code>bridge</code> (left from step 5, harmless)</td></tr>
+      <tr><td class="mono">/etc/systemd/network/eth.network</td><td>Image default: <code>eth*</code> DHCP (management)</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">8.5</span>Switch back to the bridge</h3>
+      <pre><code>systemctl disable l2disp
+cd /etc/systemd/network
+rm 10-enu2.network 10-wlan0.network
+mv disabled-br0/* .
+cp /etc/hostapd-br.conf /etc/hostapd.conf
+reboot</code></pre>
+    </div>
+    <div class="sec">
+      <h3><span class="n">8.6</span>Useful board commands</h3>
+      <pre><code>lsusb                              # phone on Bus 001 = 480 Mbps
+dmesg | grep -iE "died|fatal"      # EHCI crash check
+cat /proc/cmdline                  # cpuidle.off=1 present?
+hostapd_cli -i wlan0 all_sta       # connected clients
+ip -br addr                        # no IP on enu2 / wlan0
+journalctl -u l2disp | tail -8</code></pre>
+      <div class="note warn"><strong>Do not stop hostapd</strong><p><code>systemctl stop hostapd</code> made the WILC driver delete <code>wlan0</code> (<code>Set Timed out</code>, <code>Failed to send setup multicast</code>). Recreate it with <code>iw phy phy0 interface add wlan0 type managed</code>.</p></div>
+    </div>
+  </div>
+<div class="sec">
+    <h3><span class="n">8.7</span>Commands on the board</h3>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 8-1: <span>Health checks</span></p>
+        <pre><code>uname -v                           # kernel build (#3 = 2026-11-02 19:45)
+cat /proc/cmdline                  # must contain cpuidle.off=1
+lsusb                              # phone on Bus 001 = 480 Mbps
+dmesg | grep -iE "died|fatal"      # empty = no EHCI crash
+ip -br addr                        # no IP on enu2 / wlan0
+systemctl is-active hostapd l2disp</code></pre>
+      </div>
+      <div>
+        <p class="cap">Table 8-2: <span>Clients and counters</span></p>
+        <pre><code>hostapd_cli -i wlan0 status
+hostapd_cli -i wlan0 all_sta       # connected clients
+kill -USR1 $(pidof l2disp); sleep 1
+journalctl -u l2disp | tail -8     # per-client counters
+cat /sys/bus/usb/devices/1-2/speed # 480</code></pre>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 8-3: <span>Debug</span></p>
+        <pre><code>mount -t debugfs none /sys/kernel/debug
+cat /sys/kernel/debug/usb/usbmon/1u &gt; /root/usb.txt &amp;
+devmem2 0x00500014 w               # EHCI USBSTS
+grep -iE "PA10|vbus" /sys/kernel/debug/gpio
+timeout 8 tcpdump -n -e -i wlan0 -c 10
+ip -s link show enu2               # TX / RX errors</code></pre>
+      </div>
+      <div>
+        <p class="cap">Table 8-4: <span>Recovery</span></p>
+        <pre><code># phone stuck after a board reboot:
+#   tethering off, unplug, plug, tethering on
+# wlan0 gone after stopping hostapd:
+iw phy phy0 interface add wlan0 type managed
+systemctl restart hostapd l2disp
+# console port busy on the PC:
+sudo fuser -v /dev/ttyUSB0</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">8.8</span>Glossary</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Term</th><th>Meaning</th></tr></thead>
+      <tbody>
+      <tr><td class="k">AF_PACKET</td><td>Linux socket family that sends and receives whole Ethernet frames on one interface</td></tr>
+      <tr><td class="k">AP / SoftAP</td><td>Access point: the side of a Wi-Fi network that clients join. SoftAP = AP run in software on a host</td></tr>
+      <tr><td class="k">ARP</td><td>Address Resolution Protocol: finds the MAC address for an IPv4 address (broadcast question, unicast answer)</td></tr>
+      <tr><td class="k">Bridge (br0)</td><td>Linux kernel Layer 2 switch between interfaces; the stand-in for the dispatcher in step 5</td></tr>
+      <tr><td class="k">Bulk transfer</td><td>USB transfer type for large data; carries the Ethernet frames (<code>Bi</code> in, <code>Bo</code> out)</td></tr>
+      <tr><td class="k">CDC-ECM / CDC-NCM</td><td>Standard USB classes for Ethernet over USB (ECM: one frame per transfer, NCM: several)</td></tr>
+      <tr><td class="k">cpuidle</td><td>Linux framework that picks a low-power state when the CPU has nothing to do</td></tr>
+      <tr><td class="k">DHCP</td><td>Dynamic Host Configuration Protocol: hands out IP addresses (Discover, Offer, Request, Ack)</td></tr>
+      <tr><td class="k">DMA</td><td>Direct memory access: a peripheral (here the USB controller) reads and writes RAM without the CPU</td></tr>
+      <tr><td class="k">EAPOL</td><td>EAP over LAN, EtherType <code>0x888E</code>: carries the WPA2 key handshake</td></tr>
+      <tr><td class="k">EHCI</td><td>Enhanced Host Controller Interface: the USB 2.0 High-Speed (480 Mbps) host controller</td></tr>
+      <tr><td class="k">EtherType</td><td>2-byte field in the Ethernet header that names the payload protocol</td></tr>
+      <tr><td class="k">FDB</td><td>Forwarding database: a bridge's table of which MAC lives on which port</td></tr>
+      <tr><td class="k">FIT image (.itb)</td><td>U-Boot Flattened Image Tree: one file holding the kernel, device tree and overlays</td></tr>
+      <tr><td class="k">GRO</td><td>Generic Receive Offload: the kernel merges received packets; turned off on <code>enu2</code> so merged frames are not too big to send</td></tr>
+      <tr><td class="k">hostapd</td><td>Linux daemon that runs a Wi-Fi access point and its security handshake</td></tr>
+      <tr><td class="k">HSIC</td><td>High-Speed Inter-Chip: a USB 2.0 link between chips on a board, without a connector</td></tr>
+      <tr><td class="k">MAC address</td><td>48-bit hardware address in every Ethernet frame (destination, source)</td></tr>
+      <tr><td class="k">NAT</td><td>Network Address Translation: lets many private addresses share one public IPv4</td></tr>
+      <tr><td class="k">OHCI</td><td>Open Host Controller Interface: the USB 1.1 (12 Mbps) companion controller</td></tr>
+      <tr><td class="k">Port owner</td><td>EHCI <code>PORTSC</code> bit that hands a port to the companion (OHCI) controller</td></tr>
+      <tr><td class="k">Promiscuous mode</td><td>An interface accepts frames for any MAC, not only its own</td></tr>
+      <tr><td class="k">RAM_SR</td><td>at91 cpuidle state "WFI and DDR Self Refresh"; puts DDR into power-down while idle; cause of the EHCI crash</td></tr>
+      <tr><td class="k">RNDIS</td><td>Microsoft's Remote NDIS: Ethernet over USB, used by Android tethering</td></tr>
+      <tr><td class="k">SLAAC</td><td>Stateless address autoconfiguration: an IPv6 client builds its own address from the router's prefix</td></tr>
+      <tr><td class="k">usbmon</td><td>Kernel tracer that logs every USB transfer (<code>S</code> submit, <code>C</code> complete)</td></tr>
+      <tr><td class="k">usbnet</td><td>Linux base driver shared by RNDIS, ECM and NCM; manages the USB transfer queues</td></tr>
+      <tr><td class="k">VBUS</td><td>The USB 5 V supply line; the host must switch it on for the device</td></tr>
+      <tr><td class="k">WILC3000 / WILC1000</td><td>Microchip Wi-Fi link controllers that pass raw frames to a host driver</td></tr>
+      <tr><td class="k">WPA2-PSK</td><td>Wi-Fi security with a pre-shared password and a per-client AES-CCMP key</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- =================================================================== 8 MCU OPTION -->
+<section class="page" id="mcu" role="tabpanel" aria-label="MCU Option" hidden>
+  <div class="intro"><h2>MCU Option (Later)</h2><p>A possible low-power version on a Microchip MCU. The best fit is a SAM E70 with a WILC1000, but Microchip provides no WILC driver for MCUs today, so this needs a driver port.</p></div>
+
+  <div class="sec">
+    <h3><span class="n">9.1</span>Requirements</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Need</th><th>Why</th></tr></thead>
+      <tbody>
+      <tr><td class="k">USB High-Speed host</td><td>Full-Speed (12 Mbps, ~8&ndash;9 Mbps real) is below the ~13 Mbps measured</td></tr>
+      <tr><td class="k">USB host RNDIS / ECM / NCM class</td><td>Phone or modem network interface</td></tr>
+      <tr><td class="k">Wi-Fi with raw Ethernet frames in AP mode</td><td>Modules with their own TCP/IP stack only offer sockets</td></tr>
+      <tr><td class="k">&ge; 4 AP clients and WPA2 handshake</td><td>hostapd does this on Linux</td></tr>
+      <tr><td class="k">RAM for buffers</td><td>~60 &times; 2 KB receive buffers &asymp; 128 KB to start</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">9.2</span>MCU candidates</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>MCU</th><th>USB host</th><th>RAM</th><th>Fit</th></tr></thead>
+        <tbody>
+        <tr><td class="k">SAM E70 / SAM V71</td><td>High-Speed, PHY on chip</td><td>384 KB</td><td><span class="pill done">Best</span></td></tr>
+        <tr><td class="k">PIC32MZ EF</td><td>High-Speed</td><td>512 KB</td><td><span class="pill md">Alternative</span></td></tr>
+        <tr><td class="k">PIC32CZ CA</td><td>High-Speed</td><td>Large</td><td><span class="pill md">Possible</span></td></tr>
+        <tr><td class="k">SAM E54</td><td>Full-Speed only</td><td>256 KB</td><td><span class="pill lo">Ethernet tests only</span></td></tr>
+        <tr><td class="k">PIC32 WFI32 / PIC32MZ W1</td><td>Full-Speed only</td><td>&mdash;</td><td><span class="pill hi">No</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">9.3</span>Microchip Wi-Fi parts</h3>
+      <div class="tbl"><table>
+        <thead><tr><th>Part</th><th>Raw L2 in AP mode</th><th>Fit</th></tr></thead>
+        <tbody>
+        <tr><td class="k">WILC1000 / WILC3000</td><td>Yes, frames go to the host</td><td><span class="pill done">Yes</span></td></tr>
+        <tr><td class="k">WINC1500 / WINC3400</td><td>Own TCP/IP; AP ~1 client</td><td><span class="pill hi">No</span></td></tr>
+        <tr><td class="k">RNWF02 / WINCS02</td><td>Sockets / AT commands</td><td><span class="pill hi">No</span></td></tr>
+        <tr><td class="k">PIC32MZ W1 (WFI32)</td><td>Built-in TCP/IP</td><td><span class="pill hi">No</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">9.4</span>SAM E70 Xplained Ultra (DM320113)</h3>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 9-1: <span>From the user guide DS70005389A</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Item</th><th>Value</th></tr></thead>
+          <tbody>
+          <tr><td class="k">MCU</td><td>ATSAME70Q21B</td></tr>
+          <tr><td class="k">USB</td><td>"USB Interface, Device and Host Mode", Micro-USB <b>TARGET USB</b></td></tr>
+          <tr><td class="k">USB pins</td><td><code>HSDM</code> / <code>HSDP</code> (High-Speed)</td></tr>
+          <tr><td class="k">VBUS host enable</td><td><code>PA08</code>, set low to power the device</td></tr>
+          <tr><td class="k">Host current</td><td>Max 400 mA from the debug USB port</td></tr>
+          <tr><td class="k">Ethernet</td><td>KSZ8061 RMII PHY board</td></tr>
+          <tr><td class="k">Expansion</td><td>2 &times; Xplained Pro EXT, 1 &times; mikroBUS, microSD (SDIO)</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="cap">Table 9-2: <span>mikroBUS pins used by the WILC1000 click board</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Pin</th><th>Signal</th><th>WILC use</th></tr></thead>
+          <tbody>
+          <tr><td class="num">11 / 12 / 13</td><td>MOSI / MISO / SCK</td><td>SPI data</td></tr>
+          <tr><td class="num">14</td><td>CS</td><td>Chip select</td></tr>
+          <tr><td class="num">7</td><td>INT</td><td>Interrupt</td></tr>
+          <tr><td class="num">15</td><td>RST</td><td>Reset</td></tr>
+          <tr><td class="num">10 / 1</td><td>3.3 V / GND</td><td>Power</td></tr>
+          </tbody>
+        </table></div>
+        <p>MCU port pins for these signals: read the mikroBUS sheet of the schematic (to verify).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">9.5</span>MCU block diagram</h3>
+    <div>
+      <p class="cap">Figure 9-1: <span>Planned connection (not built)</span></p>
+      <div class="fig"><svg viewBox="0 0 1320 200" style="min-width:900px" role="img" aria-label="MCU option block diagram">
+        <defs><marker id="m81" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <rect class="bx" x="20" y="60" width="160" height="70"/><text class="c b" x="100" y="88">Phone / LTE modem</text><text class="c s" x="100" y="108">NAT + DHCP</text>
+        <line class="ln" x1="180" y1="95" x2="330" y2="95" marker-start="url(#m81)" marker-end="url(#m81)"/>
+        <text class="c s" x="255" y="87">USB 2.0 HS</text><text class="c s" x="255" y="113">RNDIS / ECM</text>
+        <rect class="gr" x="330" y="60" width="150" height="70"/><text class="c b" x="405" y="88">Powered hub</text><text class="c s" x="405" y="108">+ OTG adapter</text>
+        <line class="ln" x1="480" y1="95" x2="630" y2="95" marker-start="url(#m81)" marker-end="url(#m81)"/>
+        <text class="c s" x="555" y="87">TARGET USB</text><text class="c s" x="555" y="113">VBUS via PA08</text>
+        <rect class="hl" x="630" y="40" width="210" height="110"/><text class="c b" x="735" y="70">SAM E70 Xplained Ultra</text><text class="c s" x="735" y="90">ATSAME70Q21B, 300 MHz</text><text class="c s" x="735" y="108">USB host class driver (to write)</text><text class="c s" x="735" y="126">dispatcher loop (port of l2disp)</text>
+        <line class="ln" x1="840" y1="95" x2="990" y2="95" marker-start="url(#m81)" marker-end="url(#m81)"/>
+        <text class="c s" x="915" y="87">mikroBUS SPI</text><text class="c s" x="915" y="113">INT, RST</text>
+        <rect class="bx" x="990" y="60" width="150" height="70"/><text class="c b" x="1065" y="88">WILC1000 click</text><text class="c s" x="1065" y="108">driver to port</text>
+        <line class="ln" x1="1140" y1="95" x2="1290" y2="95" marker-end="url(#m81)"/>
+        <text class="c s" x="1215" y="87">Wi-Fi AP</text><text class="c s" x="1215" y="113">to clients</text>
+      </svg></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">9.6</span>Software gap and questions to Microchip</h3>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 9-3: <span>What exists (checked 2026-11-03)</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Source</th><th>WILC support</th></tr></thead>
+          <tbody>
+          <tr><td class="k">Harmony 3 <code>wireless_wifi</code></td><td>Drivers: <code>ethmac</code>, <code>pic32mzw1</code>, <code>winc</code>, <code>wincs02</code>. No WILC</td></tr>
+          <tr><td class="k">MicrochipTech GitHub</td><td>WILC Linux porting guides, <code>WILC1000_QNX_Driver</code></td></tr>
+          <tr><td class="k">Linux driver</td><td><code>drivers/net/wireless/microchip/wilc1000/</code> in linux4microchip</td></tr>
+          <tr><td class="k">Firmware</td><td><code>github.com/linux4wilc/firmware</code>, latest tag <code>wilc_2025_10</code></td></tr>
+          <tr><td class="k">KB 000014086 (2022)</td><td>Linux release v15.7, kernel 5.15; older than this board</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div>
+        <p class="cap">Table 9-4: <span>Questions in the support email (drafted, not sent)</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>#</th><th>Question</th></tr></thead>
+          <tbody>
+          <tr><td class="k">1</td><td>WILC1000 SoftAP driver for SAM E70 (Harmony 3 / FreeRTOS / bare metal)?</td></tr>
+          <tr><td class="k">2</td><td>Raw frames to the host in SoftAP, &ge; 4 stations, WPA2 handshake in firmware or host?</td></tr>
+          <tr><td class="k">3</td><td>Harmony 3 USB host class for RNDIS / CDC-ECM / CDC-NCM on SAM E70?</td></tr>
+          <tr><td class="k">4</td><td>SAMA5D2 EHCI <code>HC died</code> with cpuidle <code>RAM_SR</code>: known erratum, fix that keeps idle?</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =================================================================== 9 STATUS -->
+<section class="page" id="status" role="tabpanel" aria-label="Status" hidden>
+  <div class="intro"><h2>Status</h2><p>The MPU solution works end to end and starts by itself at boot. Open items are the 4-client test, the EC25 modem, and a clean fix for the EHCI idle issue.</p></div>
+
+  <div class="sec">
+    <h3><span class="n">10.1</span>Done and open</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Item</th><th>Status</th><th>Note</th></tr></thead>
+      <tbody>
+      <tr><td class="k">Concept and hardware</td><td><span class="pill done">Done</span></td><td>SAMA5D27-WLSOM1-EK1</td></tr>
+      <tr><td class="k">Phone check on PC (RNDIS, 2 MACs)</td><td><span class="pill done">Done</span></td><td>2026-11-02</td></tr>
+      <tr><td class="k">Boot Linux4SAM, console</td><td><span class="pill done">Done</span></td><td>2026-11-02</td></tr>
+      <tr><td class="k">Kernel with USB net drivers</td><td><span class="pill done">Done</span></td><td>Built-in, kernel #3</td></tr>
+      <tr><td class="k">Wi-Fi AP</td><td><span class="pill done">Done</span></td><td>3 clients</td></tr>
+      <tr><td class="k">EHCI crash</td><td><span class="pill done">Worked around</span></td><td><code>cpuidle.off=1</code> saved in U-Boot</td></tr>
+      <tr><td class="k">Bridge test</td><td><span class="pill done">Done</span></td><td>3 clients, ~12 Mbps</td></tr>
+      <tr><td class="k">Dispatcher l2disp</td><td><span class="pill done">Done</span></td><td>Starts at boot, ~13 Mbps</td></tr>
+      <tr><td class="k">4 clients at once</td><td><span class="pill open">Open</span></td><td>Needs a 4th device</td></tr>
+      <tr><td class="k">EC25 (ECM, APN)</td><td><span class="pill open">Open</span></td><td>Not ordered</td></tr>
+      <tr><td class="k">MCU version</td><td><span class="pill open">Later</span></td><td>Waiting for Microchip answer</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">10.2</span>Findings</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>ID</th><th>Severity</th><th>Area</th><th>Finding</th><th>Suggested action</th></tr></thead>
+      <tbody>
+      <tr><td class="k">F1</td><td><span class="pill hi">High</span></td><td>Kernel / USB</td><td>EHCI dies with cpuidle <code>RAM_SR</code>; fixed only by disabling cpuidle</td><td>Report to Microchip; measure idle power with and without the option</td></tr>
+      <tr><td class="k">F2</td><td><span class="pill md">Medium</span></td><td>Phone</td><td>Phone stops accepting data if it stays plugged in during a board reboot</td><td>Plug in after boot; check if the EC25 behaves the same</td></tr>
+      <tr><td class="k">F3</td><td><span class="pill md">Medium</span></td><td>WILC driver</td><td><code>systemctl stop hostapd</code> deletes <code>wlan0</code> (<code>Set Timed out</code>)</td><td>Don't stop hostapd; recreate with <code>iw phy phy0 interface add</code></td></tr>
+      <tr><td class="k">F4</td><td><span class="pill lo">Low</span></td><td>Kernel</td><td>Test patch <code>EVENT_NO_IP_ALIGN</code> still in <code>rndis_bind()</code></td><td>Revert at next rebuild</td></tr>
+      <tr><td class="k">F5</td><td><span class="pill lo">Low</span></td><td>Wi-Fi</td><td><code>country_code=IN</code> chosen from the IPv6 range</td><td>Set to the country of use</td></tr>
+      <tr><td class="k">F6</td><td><span class="pill lo">Low</span></td><td>Board DNS</td><td><code>systemd-resolved</code> on the board did not use the phone's DNS (only affects board tools, not clients)</td><td>Ignore, or set DNS for <code>eth0</code> management</td></tr>
+      <tr><td class="k">F7</td><td><span class="pill lo">Low</span></td><td>Startup</td><td><code>WILC: Get Timed out / Failed to get RSSI value</code> at boot</td><td>Harmless so far; first suspect if Wi-Fi fails</td></tr>
+      <tr><td class="k">F8</td><td><span class="pill lo">Low</span></td><td>l2disp</td><td>Two <code>socket error, reopening</code> per replug (unplug + <code>usb0</code>&rarr;<code>enu2</code> rename)</td><td>Harmless; could wait for the rename</td></tr>
+      <tr><td class="k">F9</td><td><span class="pill lo">Low</span></td><td>Config</td><td><code>/etc/modules-load.d/bridge.conf</code> still loads the bridge module</td><td>Remove when the bridge is no longer needed</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">10.3</span>Risks from the plan</h3>
+    <div class="tbl"><table>
+      <thead><tr><th>Risk</th><th>Result</th></tr></thead>
+      <tbody>
+      <tr><td class="k">1. Separate DHCP leases for several client MACs</td><td><span class="pill done">Pass</span> 3 clients (phone)</td></tr>
+      <tr><td class="k">2. Modem accepts foreign source MACs</td><td><span class="pill done">Pass</span> (phone)</td></tr>
+      <tr><td class="k">3. WILC3000 AP with &ge; 4 stations</td><td><span class="pill md">3 tested</span></td></tr>
+      <tr><td class="k">4. WILC (full-MAC) in a bridge in AP mode</td><td><span class="pill done">Pass</span></td></tr>
+      <tr><td class="k">EC25: router mode (<code>AT+QCFG="nat",1</code>?) and multi-MAC</td><td><span class="pill open">Open</span></td></tr>
+      </tbody>
+    </table></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">10.4</span>Demo checklist</h3>
+    <ol>
+      <li>Power the board from the 65 W charger, phone unplugged. Wait ~1 minute.</li>
+      <li>Plug in the Realme and turn on USB tethering.</li>
+      <li>Connect 3&ndash;4 devices to <code>L2_Dispatcher</code> (password <code>test12345</code>), mobile data off.</li>
+      <li>Show the <code>192.168.56.x</code> addresses (from the phone) and open fast.com (~12&ndash;13 Mbps).</li>
+      <li>Optional: <code>kill -USR1 $(pidof l2disp); sleep 1; journalctl -u l2disp | tail -8</code> for per-client counters.</li>
+    </ol>
+  </div>
+</section>
+
+</div></main>
+
+<footer><div class="wrap"><span>L2 Packet Dispatcher &middot; Microchip Technology Inc.</span></div></footer>
+
+<script>
+(function () {
+  var tabs = Array.prototype.slice.call(document.querySelectorAll('nav.tabs button'));
+  var pages = Array.prototype.slice.call(document.querySelectorAll('section.page'));
+  var heroTitle = document.getElementById('hero-title'),
+      heroLead = document.getElementById('hero-lead'), crumb = document.getElementById('crumb');
+
+  function show(id, scroll) {
+    var target = document.getElementById(id);
+    if (!target || !target.classList.contains('page')) id = 'overview';
+    pages.forEach(function (p) {
+      var on = p.id === id;
+      p.hidden = !on;
+      if (on) {
+        heroTitle.textContent = p.querySelector('.intro h2').textContent;
+        heroLead.textContent = p.querySelector('.intro p').textContent;
+      }
+    });
+    tabs.forEach(function (t) {
+      var on = t.dataset.tab === id;
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+      t.tabIndex = on ? 0 : -1;
+      if (on) {
+        crumb.textContent = t.textContent;
+        if (t.scrollIntoView) t.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+      }
+    });
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    if (scroll) window.scrollTo(0, 0);
+  }
+
+  tabs.forEach(function (t, i) {
+    t.addEventListener('click', function () { show(t.dataset.tab, true); });
+    t.addEventListener('keydown', function (e) {
+      var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : null;
+      if (n === null) return;
+      n = (n + tabs.length) % tabs.length;
+      tabs[n].focus();
+      show(tabs[n].dataset.tab, false);
+    });
+  });
+  show((location.hash || '#overview').slice(1), false);
+})();
+</script>

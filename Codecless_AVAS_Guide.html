@@ -174,6 +174,41 @@ td.mono, td .mono { white-space: nowrap; }
 
 footer { background: var(--panel); color: var(--ink-2); font-size: .82rem; }
 footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+
+/* packet flow simulator */
+.sim { border: 1px solid var(--line); background: #fff; }
+.sim .fig { border: 0; border-top: 1px solid var(--line); }
+.sim-ctl { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; padding: 14px 16px; background: var(--panel); }
+.sim-ctl label { display: grid; gap: 4px; font-size: .8rem; font-weight: 600; }
+.sim-ctl label[hidden] { display: none; }
+.sim-ctl select, .sim-ctl input[type=number] { font: .86rem var(--f-mono); padding: 7px 8px; border: 1px solid var(--line); background: #fff; color: var(--ink); }
+.sim-ctl input[type=number] { width: 6rem; }
+.sim-ctl input[type=color] { width: 52px; height: 34px; padding: 2px; border: 1px solid var(--line); background: #fff; }
+.sim-ctl .sim-chk { display: flex; align-items: center; gap: 6px; font-weight: 400; padding-bottom: 8px; }
+.sim-btns { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.sim-btns .btn { padding: 10px 16px; }
+.btn.ghost { background: #fff; color: var(--navy); box-shadow: inset 0 0 0 1px var(--navy); }
+.btn.ghost:hover { background: var(--navy-soft); }
+.btn:disabled { opacity: .4; cursor: default; }
+.sim-stat { display: flex; flex-wrap: wrap; gap: 4px 22px; padding: 8px 16px; font: .82rem var(--f-mono); border-top: 1px solid var(--line); }
+.sim-stat b { color: var(--navy); }
+.sim svg .act { stroke: var(--orange) !important; stroke-width: 3.2 !important; }
+.sim svg .ok { fill: var(--ok-bg); stroke: var(--ok); stroke-width: 1.4; }
+.sim svg .pill { fill: #fff; stroke: #000; stroke-width: 1.2; }
+.sim svg .pill.on { fill: var(--navy); stroke: var(--navy); }
+.sim svg .pill.bad { fill: var(--red); stroke: var(--red); }
+.sim svg .pill.good { fill: var(--ok); stroke: var(--ok); }
+.sim svg .pt.on { fill: #fff; font-weight: 700; }
+.sim svg .rbc { fill: #fff; stroke: #8a8a8a; stroke-width: 1; }
+.sim svg .rbc.w { fill: #fff7e6; stroke: #a35c00; }
+.sim svg .rbc.r { fill: var(--navy-soft); stroke: var(--navy); }
+.sim svg .tgc { stroke: #000; stroke-width: 1; }
+.sim-log { font: .76rem/1.55 var(--f-mono); height: 190px; overflow: auto; padding: 8px 16px; border-top: 1px solid var(--line); background: #fbfbfb; color: var(--ink-2); }
+.sim-log .t { color: #8a8a8a; }
+.sim-log .x { color: var(--red); font-weight: 600; }
+.sim-log .g { color: var(--ok); font-weight: 600; }
+.sim-log div:last-child { color: var(--ink); }
+@media (max-width: 680px) { .sim-btns { margin-left: 0; } }
 </style>
 
 <header class="top">
@@ -1354,6 +1389,267 @@ else            smooth += 0.05 * (e - smooth);   // slow decay</code></pre>
       </div>
     </div>
   </div>
+
+  <div class="sec">
+    <h3><span class="n">8.5</span>End-to-end packet flow</h3>
+    <div>
+      <p class="cap">Figure 8-2: <span>Animated packet flow simulator. Pick a command and press <b>Send</b> to watch it go from the HMI over LIN into the dsPIC and out to the OSP strip</span></p>
+      <div class="sim" id="sim">
+        <div class="sim-ctl">
+          <label>Command
+            <select id="sim-cmd">
+              <option value="rgb" selected>0x09 RGB colour</option>
+              <option value="style">0x08 LED style STATIC</option>
+              <option value="bright">0x0A Brightness</option>
+              <option value="on">0x01 LED power ON</option>
+              <option value="off">0x01 LED power OFF</option>
+              <option value="left">0x20 Left indicator ON</option>
+              <option value="leftoff">0x20 Left indicator OFF</option>
+              <option value="park">0x22 Parking ON</option>
+              <option value="avas">0x10 AVAS ON</option>
+              <option value="rpm">0x11 RPM 3000</option>
+            </select>
+          </label>
+          <label id="sim-col-l">Colour<input type="color" id="sim-col" value="#ff6400"></label>
+          <label id="sim-val-l" hidden>Brightness %<input type="number" id="sim-val" min="0" max="100" value="30"></label>
+          <label>Fault injection
+            <select id="sim-fault">
+              <option value="none" selected>None (good frame)</option>
+              <option value="chk">Wrong checksum</option>
+              <option value="pid">Wrong PID parity</option>
+            </select>
+          </label>
+          <label>Speed
+            <select id="sim-speed">
+              <option value="0.5">0.5&times;</option><option value="1" selected>1&times;</option><option value="2">2&times;</option><option value="4">4&times;</option>
+            </select>
+          </label>
+          <label class="sim-chk"><input type="checkbox" id="sim-all"> Animate every LED</label>
+          <div class="sim-btns">
+            <button class="btn" id="sim-send" type="button">&#9654; Send</button>
+            <button class="btn ghost" id="sim-pause" type="button" disabled>Pause</button>
+            <button class="btn ghost" id="sim-step" type="button" disabled>Step</button>
+            <button class="btn ghost" id="sim-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="sim-stat" aria-live="polite">
+          <span>Stage: <b id="sim-phase">Ready</b></span>
+          <span>Simulated time: <b id="sim-time">0.000 ms</b></span>
+          <span>Frame: <b id="sim-bytes">&mdash;</b></span>
+        </div>
+        <div class="fig"><svg id="sim-svg" viewBox="0 0 1000 600" style="min-width:900px" role="img" aria-label="Animated LIN to OSP packet flow">
+          <defs>
+            <marker id="msim" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker>
+            <filter id="sim-glow" x="-1" y="-1" width="3" height="3"><feGaussianBlur stdDeviation="3"/></filter>
+          </defs>
+          <text class="s b" x="10" y="16">&#9312; LIN SIDE: HMI &rarr; BUS &rarr; UART2</text>
+          <rect class="bx" id="sim-hmi" x="10" y="30" width="150" height="74"/><text class="c b" x="85" y="52">SAMA5D27 HMI</text><text class="c s" x="85" y="70">send_frame()</text><text class="c m" id="sim-hmi-sub" x="85" y="92">idle</text>
+          <rect class="gr" id="sim-mst" x="180" y="30" width="110" height="74"/><text class="c b" x="235" y="60">MCP2003B</text><text class="c s" x="235" y="78">master</text>
+          <line x1="160" y1="67" x2="180" y2="67" class="ln"/>
+          <line x1="290" y1="67" x2="710" y2="67" stroke="#1c3460" stroke-width="4"/>
+          <text class="c s" x="500" y="40">LIN bus &middot; 115 200 baud &middot; 1 byte = 10 bits = 86.8 &micro;s</text>
+          <g id="sim-chip" transform="translate(292,0)" opacity="0"><rect x="0" y="54" width="46" height="26" rx="4" fill="#f7941d" stroke="#000"/><text class="c m b" id="sim-chip-t" x="23" y="72">00</text></g>
+          <rect class="gr" id="sim-slv" x="710" y="30" width="110" height="74"/><text class="c b" x="765" y="60">MCP2003B</text><text class="c s" x="765" y="78">slave &rarr; RA5</text>
+          <line x1="820" y1="67" x2="840" y2="67" class="ln"/>
+          <rect class="nt" id="sim-isr" x="840" y="30" width="150" height="74"/><text class="c b" x="915" y="52">_U2RXInterrupt</text><text class="c s" x="915" y="70">IPL 2, per byte</text><text class="c m" id="sim-isr-sub" x="915" y="92">&mdash;</text>
+          <text class="s" x="10" y="134">UART bits</text><text class="s" x="10" y="150">(LSB first)</text>
+          <path id="sim-wave" class="ln" d="M290,128 H710"/>
+          <g id="sim-wbits"></g>
+          <text class="s" x="718" y="132">1 = recessive</text><text class="s" x="718" y="160">0 = dominant</text>
+
+          <text class="s b" x="10" y="200">&#9313; RECEIVE: RING BUFFER &rarr; PARSER (main loop)</text>
+          <text class="s" x="10" y="216">rx_buf[64], 16 slots shown</text>
+          <g id="sim-rb"></g>
+          <text class="m" id="sim-head" x="10" y="266" fill="#a35c00">&#9650;head</text>
+          <text class="m" id="sim-tail" x="10" y="280" fill="#1c3460">&#9650;tail</text>
+          <text class="s" x="520" y="216">LIN_Slave_Process() state</text>
+          <g id="sim-st"></g>
+          <text class="m" id="sim-frame" x="520" y="268">frame: &mdash;</text>
+          <text class="s" id="sim-cnt" x="520" y="284">frames 0 &middot; errors 0 &middot; breaks 0</text>
+
+          <text class="s b" x="10" y="296">&#9314; DISPATCH &rarr; RENDER &rarr; OSP TELEGRAM</text>
+          <rect class="hl" id="sim-hd" x="10" y="304" width="300" height="88"/><text class="c b" x="160" y="324">LIN_FrameHandler()</text><text class="c s" id="sim-h1" x="160" y="344">&mdash;</text><text class="c s" id="sim-h2" x="160" y="362"></text><text class="c s" id="sim-h3" x="160" y="380"></text>
+          <rect class="hl" id="sim-rd" x="325" y="304" width="200" height="88"/><text class="c b" id="sim-r0" x="425" y="324">Renderer</text><text class="c s" id="sim-r1" x="425" y="344">&mdash;</text><text class="c s" id="sim-r2" x="425" y="362"></text><text class="c s" id="sim-r3" x="425" y="380"></text>
+          <rect class="hl" id="sim-tg" x="540" y="304" width="450" height="88"/><text class="b" x="552" y="322">osp_SETPWM()</text><text class="s e" id="sim-tg-t" x="980" y="322">&mdash;</text>
+          <g id="sim-tgc"></g>
+          <text class="m" id="sim-man" x="552" y="384" style="font-size:9.4px">Manchester: &mdash;</text>
+
+          <text class="s b" x="10" y="420">&#9315; OSP SIDE: SPI2 DMA &rarr; DAISY-CHAINED LEDS</text>
+          <path class="ln" d="M765,392 V430 H30 V490"/>
+          <text class="s" x="560" y="446">SPI2 SDO (RF11) &middot; 4.76 MHz &middot; FF + 20 B + FF = 37 &micro;s</text>
+          <g id="sim-strip"></g>
+          <line x1="481" y1="478" x2="481" y2="528" class="ll"/>
+          <text class="c s" x="250" y="545">RIGHT side 21 &larr; 1</text><text class="c s" x="710" y="545">LEFT side 22 &rarr; 42</text>
+          <circle id="sim-pulse" cx="30" cy="500" r="12" fill="none" stroke="#f7941d" stroke-width="3" opacity="0"/>
+          <g id="sim-spi" opacity="0"><rect x="-26" y="-12" width="52" height="24" rx="4" fill="#1c3460"/><text class="c m b" id="sim-spi-t" x="0" y="4" fill="#fff" style="fill:#fff">LED 1</text></g>
+          <text class="s" id="sim-led-note" x="10" y="580">42 LEDs detected &middot; start state: STATIC style, colour 255 100 0, brightness 100 %</text>
+        </svg></div>
+        <div class="sim-log" id="sim-log" aria-live="off"></div>
+      </div>
+      <div class="legend"><span>Orange outline = block working now</span><span>Orange chip = LIN byte on the bus</span><span>Navy chip = OSP telegram on SPI2</span><span>Ring = telegram passing along the chain</span></div>
+      <div class="note"><strong>What the simulator models</strong><p>The parser, the checksum, <code>LIN_FrameHandler()</code>, the indicator logic and the SETPWM bytes follow the firmware code exactly, so a wrong checksum or PID really drops the frame. The <em>Simulated time</em> counts only bus bytes (86.8 &micro;s), SETPWM telegrams (~90 &micro;s each) and indicator steps (25 ms). It does not include main-loop delays. The first two telegrams of each strip update run at teaching speed; the rest of the strip is fast-forwarded unless <b>Animate every LED</b> is ticked. <b>Step</b> works while paused.</p></div>
+    </div>
+    <div>
+      <p class="cap">Figure 8-3: <span>Static summary: one command from touch screen to LED, example <em>RGB 255 100 0</em> with the STATIC effect active</span></p>
+      <div class="fig"><svg viewBox="0 0 1000 400" style="min-width:880px" role="img" aria-label="End-to-end packet flow">
+        <defs><marker id="m81" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <!-- row 1 -->
+        <rect class="bx" x="10" y="40" width="180" height="96"/><text class="c s" x="100" y="58">&#9312; HMI (Linux)</text><text class="c b" x="100" y="80">send_frame()</text><text class="c s" x="100" y="98">colour slider &rarr; /dev/ttyS2</text><text class="c m" x="100" y="122">00 55 E2 09 FF 64 00 92</text>
+        <rect class="gr" x="210" y="40" width="180" height="96"/><text class="c s" x="300" y="58">&#9313; Hardware</text><text class="c b" x="300" y="80">MCP2003B master</text><text class="c s" x="300" y="98">TXD &rarr; single-wire LIN bus</text><text class="c s" x="300" y="122">8 bytes &times; 10 bit = 0.69 ms</text>
+        <rect class="gr" x="410" y="40" width="180" height="96"/><text class="c s" x="500" y="58">&#9314; Hardware</text><text class="c b" x="500" y="80">MCP2003B slave</text><text class="c s" x="500" y="98">LIN bus &rarr; RXD</text><text class="c s" x="500" y="122">U2RX = RA5 (XPRO2-5)</text>
+        <rect class="nt" x="610" y="40" width="180" height="96"/><text class="c s" x="700" y="58">&#9315; ISR, IPL 2</text><text class="c b" x="700" y="80">_U2RXInterrupt</text><text class="c s" x="700" y="98">drain UART FIFO per byte</text><text class="c m" x="700" y="122">entry = FERIF&lt;&lt;8 | byte</text>
+        <rect class="nt" x="810" y="40" width="180" height="96"/><text class="c s" x="900" y="58">&#9316; Shared memory</text><text class="c b" x="900" y="80">rx_buf[64]</text><text class="c s" x="900" y="98">head = ISR, tail = main</text><text class="c s" x="900" y="122">full &rarr; rx_overflow_count++</text>
+        <line class="ln" x1="190" y1="88" x2="210" y2="88" marker-end="url(#m81)"/>
+        <line class="ln" x1="390" y1="88" x2="410" y2="88" marker-end="url(#m81)"/>
+        <line class="ln" x1="590" y1="88" x2="610" y2="88" marker-end="url(#m81)"/>
+        <line class="ln" x1="790" y1="88" x2="810" y2="88" marker-end="url(#m81)"/>
+        <path class="ln" d="M900,136 V250" marker-end="url(#m81)"/><text class="s" x="908" y="198">main loop</text>
+        <!-- row 2 (right to left) -->
+        <rect class="hl" x="810" y="250" width="180" height="96"/><text class="c s" x="900" y="268">&#9317; Main loop</text><text class="c b" x="900" y="290">LIN_Slave_Process()</text><text class="c s" x="900" y="308">BREAK &rarr; SYNC &rarr; PID &rarr; DATA</text><text class="c s" x="900" y="332">classic checksum OK</text>
+        <rect class="hl" x="610" y="250" width="180" height="96"/><text class="c s" x="700" y="268">&#9318; Main loop (callback)</text><text class="c b" x="700" y="290">LIN_FrameHandler()</text><text class="c s" x="700" y="308">ID 0x22, D0 = 0x09</text><text class="c s" x="700" y="332">OSP_Audio_SetRGBColor()</text>
+        <rect class="hl" x="410" y="250" width="180" height="96"/><text class="c s" x="500" y="268">&#9319; Main loop</text><text class="c b" x="500" y="290">OSP_Audio_UpdateLEDs()</text><text class="c s" x="500" y="308">every 10th call (STATIC)</text><text class="c s" x="500" y="332">8-bit &rarr; 14-bit &times; brightness</text>
+        <rect class="hl" x="210" y="250" width="180" height="96"/><text class="c s" x="300" y="268">&#9320; Main loop, per LED</text><text class="c b" x="300" y="290">osp_SETPWM(r,g,b,n)</text><text class="c s" x="300" y="308">10 B + CRC &rarr; 20 B Manchester</text><text class="c m" x="300" y="332">A0 07 4F 3F FF 19 19 .. 27</text>
+        <rect class="gr" x="10" y="250" width="180" height="96"/><text class="c s" x="100" y="268">&#9321; Hardware</text><text class="c b" x="100" y="290">SPI2 DMA &rarr; strip</text><text class="c s" x="100" y="308">22 B at 4.76 MHz = 37 &micro;s</text><text class="c s" x="100" y="332">LED n latches new PWM</text>
+        <line class="ln" x1="810" y1="298" x2="790" y2="298" marker-end="url(#m81)"/>
+        <line class="ln" x1="610" y1="298" x2="590" y2="298" marker-end="url(#m81)"/>
+        <line class="ln" x1="410" y1="298" x2="390" y2="298" marker-end="url(#m81)"/>
+        <line class="ln" x1="210" y1="298" x2="190" y2="298" marker-end="url(#m81)"/>
+        <path class="ln ds" d="M100,250 V200 H300 V250" marker-end="url(#m81)"/><text class="c s" x="200" y="194">repeat for LED 1..N</text>
+        <text class="s" x="10" y="24">LIN side</text><text class="s" x="10" y="384">OSP side</text>
+      </svg></div>
+      <div class="legend"><span>White = HMI software</span><span>Grey = hardware</span><span>Cream = ISR context</span><span>Blue = main loop</span><span>Dashed = loop over LEDs</span></div>
+    </div>
+    <div>
+      <p class="cap">Table 8-3: <span>What the packet looks like at each hop</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>#</th><th>Hop</th><th>Runs in</th><th>Packet at this point</th><th>Code</th></tr></thead>
+        <tbody>
+        <tr><td class="num">1</td><td class="k">HMI builds frame</td><td>Linux user space</td><td class="mono">00 55 E2 09 FF 64 00 92</td><td><code>AudioLEDController.send_frame()</code> (Section 9.5)</td></tr>
+        <tr><td class="num">2&ndash;3</td><td class="k">LIN bus</td><td>MCP2003B pair</td><td>Same 8 bytes, 115 200 8N1, dominant = 0</td><td>&mdash;</td></tr>
+        <tr><td class="num">4</td><td class="k">UART2 RX</td><td>ISR, priority 2</td><td><code>uint16</code> per byte, bit 8 = framing error</td><td><code>_U2RXInterrupt</code>, <code>lin_slave.c</code></td></tr>
+        <tr><td class="num">5</td><td class="k">Ring buffer</td><td>ISR &rarr; main</td><td>64 entries, lock-free (single producer / single consumer)</td><td><code>rx_buf</code>, <code>rx_head</code>, <code>rx_tail</code></td></tr>
+        <tr><td class="num">6</td><td class="k">Parser</td><td>Main loop</td><td><code>lin_frame_t</code>: <code>raw_id = 0x22</code>, <code>data = 09 FF 64 00</code>, <code>valid</code></td><td><code>LIN_Slave_Process()</code></td></tr>
+        <tr><td class="num">7</td><td class="k">Dispatch</td><td>Main loop</td><td>Signal 0x09 &rarr; <code>user_color_r/g/b = 255/100/0</code></td><td><code>LIN_FrameHandler()</code>, <code>audio_demo.c</code></td></tr>
+        <tr><td class="num">8</td><td class="k">Render</td><td>Main loop</td><td>R 0x3FFF, G 0x1919, B 0x0000 (brightness 100 %)</td><td><code>render_effect_static()</code>, <code>color8_to_osp15()</code></td></tr>
+        <tr><td class="num">9</td><td class="k">OSP telegram</td><td>Main loop</td><td>10 bytes &rarr; 20 Manchester bytes (Section 8.7)</td><td><code>osp_SETPWM()</code>, <code>osp.c</code></td></tr>
+        <tr><td class="num">10</td><td class="k">SPI2 + DMA</td><td>Hardware</td><td><code>FF</code> + 20 bytes + <code>FF</code></td><td><code>DMA_OSP_TX_DATA()</code></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note"><strong>Two contexts only</strong><p>The ISR only copies bytes. Parsing, dispatch and all OSP traffic run in the main loop, so a LIN command can never interrupt an OSP telegram that is already being sent. The only interrupt-sensitive point is the ~2 &micro;s DMA trigger window, which is protected with interrupts disabled (a fix that must stay).</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">8.6</span>Parser state machine and reject paths</h3>
+    <div>
+      <p class="cap">Figure 8-4: <span><code>LIN_Slave_Process()</code> state diagram, one transition per byte from the ring buffer</span></p>
+      <div class="fig"><svg viewBox="0 0 1000 290" style="min-width:860px" role="img" aria-label="LIN parser state diagram">
+        <defs><marker id="m82" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker>
+        <marker id="m82r" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e31b23"/></marker></defs>
+        <rect class="bx" x="20" y="70" width="150" height="50" rx="25"/><text class="c b" x="95" y="100">IDLE</text>
+        <rect class="bx" x="225" y="70" width="150" height="50" rx="25"/><text class="c b" x="300" y="100">BREAK</text>
+        <rect class="bx" x="430" y="70" width="150" height="50" rx="25"/><text class="c b" x="505" y="100">SYNC</text>
+        <rect class="bx" x="635" y="70" width="150" height="50" rx="25"/><text class="c b" x="710" y="100">DATA</text>
+        <rect class="bx" x="840" y="70" width="150" height="50" rx="25"/><text class="c b" x="915" y="100">CHECKSUM</text>
+        <line class="ln" x1="170" y1="95" x2="225" y2="95" marker-end="url(#m82)"/><text class="c s" x="197" y="88">0x00</text>
+        <line class="ln" x1="375" y1="95" x2="430" y2="95" marker-end="url(#m82)"/><text class="c s" x="402" y="88">0x55</text>
+        <line class="ln" x1="580" y1="95" x2="635" y2="95" marker-end="url(#m82)"/><text class="c s" x="607" y="88">PID ok</text>
+        <line class="ln" x1="785" y1="95" x2="840" y2="95" marker-end="url(#m82)"/><text class="c s" x="812" y="88">4 bytes</text>
+        <path class="ln" d="M95,70 V35 H505 V70" marker-end="url(#m82)"/><text class="c s" x="300" y="29">0x55 without break (break missed)</text>
+        <path class="ln" d="M690,70 C690,40 730,40 730,70" marker-end="url(#m82)"/><text class="c s" x="710" y="34">D0..D3 (0x00 is data)</text>
+        <!-- reject bus -->
+        <path d="M880,120 V175 H95 V120" fill="none" stroke="#e31b23" stroke-width="1.4" marker-end="url(#m82r)"/>
+        <line x1="300" y1="120" x2="300" y2="175" stroke="#e31b23" stroke-width="1.4"/><text class="s" x="308" y="150">other byte</text>
+        <line x1="505" y1="120" x2="505" y2="175" stroke="#e31b23" stroke-width="1.4"/><text class="s" x="513" y="150">bad parity, error++</text>
+        <text class="s" x="770" y="150">bad CHK, error++</text>
+        <path class="ln" d="M950,120 V215" marker-end="url(#m82)"/><text class="s" x="956" y="168">match</text>
+        <rect class="hl" x="800" y="215" width="190" height="56"/><text class="c b" x="895" y="238">LIN_FrameHandler()</text><text class="c s" x="895" y="256">frame_count++, then IDLE</text>
+        <rect class="nt" x="20" y="215" width="560" height="56"/><text class="c b" x="300" y="238">From any state: 0x00 with FERIF (real 13-bit break) &rarr; BREAK</text><text class="c s" x="300" y="256">partial frame discarded, break_count++</text>
+      </svg></div>
+      <div class="legend"><span>Black = accept path</span><span style="color:#e31b23">Red = reject, back to IDLE</span><span>Cream = global rule, checked before the switch</span></div>
+    </div>
+    <div>
+      <p class="cap">Table 8-4: <span>Where a packet can be dropped and how to see it</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Drop point</th><th>Cause</th><th>Counter / log</th></tr></thead>
+        <tbody>
+        <tr><td class="k">Ring buffer full</td><td>Main loop did not drain 64 bytes in time</td><td><code>ovf=</code> in <code>[LIN] stats</code></td></tr>
+        <tr><td class="k">IDLE, stray byte</td><td>Byte before any break / sync (wrong baud, wiring)</td><td>Printed with <code>LIN_DEBUG_RAW = 1</code></td></tr>
+        <tr><td class="k">BREAK &rarr; IDLE</td><td>Byte after break is not 0x55</td><td>None</td></tr>
+        <tr><td class="k">SYNC &rarr; IDLE</td><td>PID parity bits P0 / P1 wrong</td><td><code>errors=</code></td></tr>
+        <tr><td class="k">CHECKSUM &rarr; IDLE</td><td>Classic checksum mismatch (e.g. master uses enhanced)</td><td><code>errors=</code>, raw dump with <code>LIN_DEBUG_RAW</code></td></tr>
+        <tr><td class="k">Break mid-frame</td><td>New frame started before the old one ended</td><td><code>breaks=</code></td></tr>
+        <tr><td class="k">Frame handler</td><td>ID &ne; 0x22 (still counts as LIN alive)</td><td><code>[LIN] ID 0x.. ignored</code> with <code>LIN_DEBUG</code></td></tr>
+        <tr><td class="k">Frame handler</td><td>Indicator 0x20&ndash;0x22 with unchanged value; Blip while AVAS off</td><td>None (by design)</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note"><strong>HMI break</strong><p>The HMI sends a plain <code>0x00</code> byte, which has no framing error, so it takes the IDLE &rarr; BREAK edge, not the global rule. A real 13-bit break from a LIN master (or the LIN analyser) takes the global rule. Both end up in BREAK (see Section 9.5).</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">8.7</span>OSP SETPWM telegram</h3>
+    <div>
+      <p class="cap">Figure 8-5: <span>10-byte telegram built by <code>osp_SETPWM()</code> (command 0x4F, PSI 6 = 48-bit payload)</span></p>
+      <div class="bytes">
+        <div class="byte sf"><b>B0</b><small>0xA | addr[9:6]</small></div>
+        <div class="byte sf"><b>B1</b><small>addr[5:0] | PSI[2:1]</small></div>
+        <div class="byte"><b>B2</b><small>PSI[0] | CMD 0x4F</small></div>
+        <div class="byte pl"><b>B3 B4</b><small>Red, 16 bit</small></div>
+        <div class="byte pl"><b>B5 B6</b><small>Green, 16 bit</small></div>
+        <div class="byte pl"><b>B7 B8</b><small>Blue, 16 bit</small></div>
+        <div class="byte sf"><b>B9</b><small>CRC-8, poly 0x2F</small></div>
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <p class="cap">Table 8-5: <span>Worked example, LED 1, RGB 255 100 0, brightness 100 %</span></p>
+        <div class="tbl"><table>
+          <thead><tr><th>Stage</th><th>Bytes</th></tr></thead>
+          <tbody>
+          <tr><td class="k">LIN payload</td><td class="mono">09 FF 64 00</td></tr>
+          <tr><td class="k">PWM values</td><td class="mono">R 3FFF, G 1919, B 0000</td></tr>
+          <tr><td class="k">Telegram (10 B)</td><td class="mono">A0 07 4F 3F FF 19 19 00 00 27</td></tr>
+          <tr><td class="k">Manchester (20 B)</td><td class="mono">66 AA AA 95 9A 55 A5 55 55 55<br>A9 69 A9 69 AA AA AA AA A6 95</td></tr>
+          <tr><td class="k">On SPI2 (22 B)</td><td class="mono">FF + 20 bytes + FF</td></tr>
+          </tbody>
+        </table></div>
+      </div>
+      <div class="tbl"><table>
+        <thead><tr><th>Field</th><th>Rule in code</th></tr></thead>
+        <tbody>
+        <tr><td class="k">Address</td><td>10 bit, 0 = broadcast. <code>osp_SETPWM</code> ignores addresses above the detected count</td></tr>
+        <tr><td class="k">Colour</td><td><code>(c8 &lt;&lt; 6) | (c8 &gt;&gt; 2)</code> &times; effect brightness &times; (global + 1) / 256, clamped to 0x3FFF</td></tr>
+        <tr><td class="k">CRC</td><td>Hardware CRC module, 8-bit, poly 0x2F, seed 0, over B0&ndash;B8</td></tr>
+        <tr><td class="k">Manchester</td><td><code>NibManCode[]</code>: bit 1 &rarr; <code>01</code>, bit 0 &rarr; <code>10</code>, one nibble per byte</td></tr>
+        <tr><td class="k">Padding</td><td><code>0xFF</code> before and after, prevents a low spike on SDO</td></tr>
+        <tr><td class="k">After send</td><td><code>DELAY_microseconds(50)</code>; next call waits for <code>isTXTransferComplete</code></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note warn"><strong>CRC value</strong><p>The CRC 0x27 in Table 8-5 was calculated offline with the same settings (poly 0x2F, seed 0, MSB first). Check it once against a logic-analyser capture of the SPI2 SDO line before you quote it to customers.</p></div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">8.8</span>Latency budget</h3>
+    <div>
+      <p class="cap">Table 8-6: <span>Command to visible LED change (calculated from the register settings, not measured)</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Stage</th><th>Time</th><th>Basis</th></tr></thead>
+        <tbody>
+        <tr><td class="k">LIN frame on the bus</td><td class="num">0.69 ms</td><td>8 bytes &times; 10 bit / 115 200 baud</td></tr>
+        <tr><td class="k">UART2 ISR</td><td class="num">&lt; 1 byte time</td><td>Priority 2, below the audio ISRs (ADC 6, PWM 5), so it may be delayed by a few &micro;s</td></tr>
+        <tr><td class="k">Parse + dispatch</td><td class="num">&le; 1 loop pass</td><td>Runs on the next <code>LIN_Slave_Process()</code> call after the checksum byte</td></tr>
+        <tr><td class="k">Debug print</td><td class="num">up to ~1.8 ms</td><td><code>LIN_DEBUG = 1</code>: about 21 characters on UART1 at 115 200 if <code>printf</code> blocks</td></tr>
+        <tr><td class="k">Wait for render</td><td class="num">&le; 10 loop passes</td><td>STATIC: <code>STATIC_EFFECT_DIVIDER = 10</code>. SYNCHRONIZED: next <code>update_pending</code> (every 5.3 ms)</td></tr>
+        <tr><td class="k">One SETPWM</td><td class="num">~90 &micro;s</td><td>22 B &times; 8 / 4.76 MHz = 37 &micro;s + 50 &micro;s delay + encode / CRC</td></tr>
+        <tr><td class="k">Full strip, 42 LEDs</td><td class="num">~3.7 ms</td><td>42 &times; ~90 &micro;s (shorter with fewer active LEDs)</td></tr>
+        <tr><td class="k"><b>Total</b></td><td class="num"><b>~5&ndash;7 ms</b></td><td>Plus up to 10 main-loop passes in STATIC mode</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="note"><strong>Why the strip refresh does not break the audio</strong><p>A full-strip render blocks the main loop for about 3.7 ms. The engine FIFO holds 1024 samples, which is 21 ms at 48 kHz, so <code>RefEngine_Fill()</code> catches up on the next pass and the 48 kHz ISR never runs dry. In SYNCHRONIZED mode the 3.7 ms render also fits inside the 5.3 ms VU refresh period.</p></div>
+  </div>
 </section>
 
 
@@ -1780,5 +2076,382 @@ printf '\x00\x55\xE2\x10\x00\x00\x01\xEE' &gt; /dev/ttyUSB0</code></pre>
     try { navigator.clipboard.writeText(lastFrame).then(done, selectOut); } catch (err) { selectOut(); }
   });
   render();
+})();
+</script>
+<script>
+/* ===== Packet flow simulator (Figure 8-2) ===== */
+(function () {
+  var svg = document.getElementById('sim-svg'); if (!svg) return;
+  var NS = 'http://www.w3.org/2000/svg';
+  function $(id) { return document.getElementById(id); }
+  function T(id, s) { $(id).textContent = s; }
+  function mk(tag, at, parent, text) { var e = document.createElementNS(NS, tag); for (var k in at) e.setAttribute(k, at[k]); if (text != null) e.textContent = text; parent.appendChild(e); return e; }
+  function hx(n) { return ('0' + (n & 0xFF).toString(16).toUpperCase()).slice(-2); }
+  function hxs(a) { return a.map(hx).join(' '); }
+  function h4(n) { return ('000' + n.toString(16).toUpperCase()).slice(-4); }
+
+  var N = 42, YEL = [0x3FFF, 0x2800, 0], OFF = [0, 0, 0];
+  var STN = ['IDLE', 'BREAK', 'SYNC', 'DATA', 'CHECKSUM'];
+
+  /* ---------- firmware maths (lin_slave.c, osp.c, osp_audio_led.c) ---------- */
+  function pidOf(id) { var p0 = (id ^ (id >> 1) ^ (id >> 2) ^ (id >> 4)) & 1, p1 = (~((id >> 1) ^ (id >> 3) ^ (id >> 4) ^ (id >> 5))) & 1; return (id & 0x3F) | (p0 << 6) | (p1 << 7); }
+  function dlen(id) { return id <= 0x1F ? 2 : id <= 0x2F ? 4 : 8; }
+  function chk(d) { var s = 0; d.forEach(function (b) { s += b; if (s > 0xFF) s = (s & 0xFF) + 1; }); return (~s) & 0xFF; }
+  function crc8(d) { var c = 0; d.forEach(function (b) { c ^= b; for (var i = 0; i < 8; i++) c = (c & 0x80) ? ((c << 1) ^ 0x2F) & 0xFF : (c << 1) & 0xFF; }); return c; }
+  function manN(n) { var v = 0; for (var i = 3; i >= 0; i--) v = (v << 2) | (((n >> i) & 1) ? 1 : 2); return v; }
+  function manchester(t) { var o = []; t.forEach(function (b) { o.push(manN(b >> 4), manN(b & 15)); }); return o; }
+  function telegram(a, r, g, b) { var t = [0xA0 | ((a >> 6) & 0x0F), ((6 >> 1) | ((a << 2) & 0xFC)) & 0xFF, 0x4F | ((6 << 7) & 0x80), r >> 8, r & 0xFF, g >> 8, g & 0xFF, b >> 8, b & 0xFF]; t.push(crc8(t)); return t; }
+  function osp15(c, gb) { var v = (c << 6) | (c >> 2); v = (v * (gb + 1)) >> 8; return Math.min(v, 0x3FFF); }
+
+  /* ---------- static SVG parts ---------- */
+  var wave = $('sim-wave'), wb = $('sim-wbits'), wVal = [];
+  ['S', '0', '1', '2', '3', '4', '5', '6', '7', 'P'].forEach(function (n, k) {
+    mk('text', { 'class': 'c s', x: 320 + k * 40, y: 176 }, wb, n === 'S' ? 'start' : n === 'P' ? 'stop' : 'b' + n);
+    wVal.push(mk('text', { 'class': 'c m b', x: 320 + k * 40, y: 147 }, wb, ''));
+  });
+  var rb = $('sim-rb'), rbC = [], rbT = [];
+  function cellX(i) { return 10 + i * 31; }
+  for (var i = 0; i < 16; i++) {
+    rbC.push(mk('rect', { 'class': 'rbc', x: cellX(i), y: 224, width: 28, height: 28 }, rb));
+    rbT.push(mk('text', { 'class': 'c m', x: cellX(i) + 14, y: 243 }, rb, ''));
+  }
+  var st = $('sim-st'), stR = {}, stT = {};
+  STN.forEach(function (n, k) {
+    stR[n] = mk('rect', { 'class': 'pill', x: 520 + k * 94, y: 224, width: 88, height: 28, rx: 14 }, st);
+    stT[n] = mk('text', { 'class': 'c s pt', x: 564 + k * 94, y: 243 }, st, n);
+  });
+  var tgc = $('sim-tgc'), tgT = [];
+  var FIELD = [['hdr', '#fdecec'], ['hdr', '#fdecec'], ['cmd', '#ffffff'], ['R', '#ffe3e3'], ['R', '#ffe3e3'], ['G', '#e3f5e3'], ['G', '#e3f5e3'], ['B', '#e3ecff'], ['B', '#e3ecff'], ['CRC', '#fff7e6']];
+  FIELD.forEach(function (f, k) {
+    mk('rect', { 'class': 'tgc', x: 552 + k * 43, y: 330, width: 40, height: 26, fill: f[1] }, tgc);
+    tgT.push(mk('text', { 'class': 'c m b', x: 572 + k * 43, y: 348 }, tgc, '--'));
+    mk('text', { 'class': 'c s', x: 572 + k * 43, y: 369 }, tgc, f[0]);
+  });
+  var strip = $('sim-strip'), leds = [], glows = [];
+  function ledX(n) { return 30 + (n - 1) * 22; }
+  for (var n = 1; n <= N; n++) {
+    glows.push(mk('circle', { cx: ledX(n), cy: 500, r: 11, fill: 'none', filter: 'url(#sim-glow)' }, strip));
+    leds.push(mk('circle', { cx: ledX(n), cy: 500, r: 8, fill: '#3a3a3a', stroke: '#000', 'stroke-width': 1 }, strip));
+    if (n === 1 || n === 21 || n === 22 || n === 42 || n % 5 === 0) mk('text', { 'class': 'c s', x: ledX(n), y: 526, 'font-size': '10' }, strip, n);
+  }
+  var chip = $('sim-chip'), spi = $('sim-spi'), pulse = $('sim-pulse'), logEl = $('sim-log');
+
+  /* ---------- visual helpers ---------- */
+  var ACT = ['sim-hmi', 'sim-mst', 'sim-slv', 'sim-isr', 'sim-hd', 'sim-rd', 'sim-tg'];
+  function act(ids) { ACT.forEach(function (i) { $(i).classList.remove('act'); }); (ids || []).forEach(function (i) { $(i).classList.add('act'); }); }
+  function phase(s) { T('sim-phase', s); }
+  function fmtT(us) { return (us / 1000).toFixed(3) + ' ms'; }
+  function log(msg, cls) {
+    var d = document.createElement('div'), t = document.createElement('span'), m = document.createElement('span');
+    t.className = 't'; t.textContent = '[' + fmtT(simUs) + '] '; m.textContent = msg; if (cls) m.className = cls;
+    d.appendChild(t); d.appendChild(m); logEl.appendChild(d);
+    while (logEl.childNodes.length > 500) logEl.removeChild(logEl.firstChild);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+  function drawWave(b) {
+    if (b == null) { wave.setAttribute('d', 'M290,128 H710'); wVal.forEach(function (v) { v.textContent = ''; }); return; }
+    var bits = [0]; for (var i = 0; i < 8; i++) bits.push((b >> i) & 1); bits.push(1);
+    var d = 'M290,128 H300';
+    bits.forEach(function (v, k) { d += ' V' + (v ? 128 : 158) + ' H' + (340 + k * 40); wVal[k].textContent = v; });
+    wave.setAttribute('d', d + ' V128 H710');
+  }
+  function disp(p) { function f(v) { return Math.round(255 * Math.pow(v / 0x3FFF, 0.45)); } return 'rgb(' + f(p[0]) + ',' + f(p[1]) + ',' + f(p[2]) + ')'; }
+  function setLed(n, p) {
+    var off = !(p[0] || p[1] || p[2]);
+    leds[n - 1].setAttribute('fill', off ? '#3a3a3a' : disp(p));
+    glows[n - 1].setAttribute('fill', off ? 'none' : disp(p));
+  }
+  function applyLeds(a, p) { if (a) setLed(a, p); else for (var k = 1; k <= N; k++) setLed(k, p); }
+  function showTg(t, a, p) {
+    t.forEach(function (b, k) { tgT[k].textContent = hx(b); });
+    T('sim-tg-t', (a ? 'LED ' + a : 'address 0 = broadcast') + '  ·  R ' + h4(p[0]) + '  G ' + h4(p[1]) + '  B ' + h4(p[2]));
+  }
+  function showMan(t) { T('sim-man', 'Manchester ' + hxs(manchester(t))); }
+  var SP = [[765, 392], [765, 430], [30, 430], [30, 488]];
+  function along(pts, p) {
+    var seg = [], L = 0, k;
+    for (k = 1; k < pts.length; k++) { var l = Math.abs(pts[k][0] - pts[k - 1][0]) + Math.abs(pts[k][1] - pts[k - 1][1]); seg.push(l); L += l; }
+    var d = p * L;
+    for (k = 1; k < pts.length; k++) {
+      if (d <= seg[k - 1] || k === pts.length - 1) { var f = Math.min(1, d / seg[k - 1]); return [pts[k - 1][0] + (pts[k][0] - pts[k - 1][0]) * f, pts[k - 1][1] + (pts[k][1] - pts[k - 1][1]) * f]; }
+      d -= seg[k - 1];
+    }
+  }
+  function spiAnim(p, a, pwm) {
+    if (p < 0.5) {
+      var q = along(SP, p / 0.5);
+      spi.setAttribute('transform', 'translate(' + q[0] + ',' + q[1] + ')'); spi.setAttribute('opacity', 1); pulse.setAttribute('opacity', 0);
+    } else {
+      spi.setAttribute('opacity', 0);
+      var tgt = a || N, x = ledX(1) + (ledX(tgt) - ledX(1)) * ((p - 0.5) / 0.5);
+      pulse.setAttribute('cx', x); pulse.setAttribute('opacity', p >= 1 ? 0 : 1);
+      if (!a) { var upto = Math.floor((x - ledX(1)) / 22) + 1; for (var k = 1; k <= upto; k++) setLed(k, pwm); }
+      if (p >= 1) applyLeds(a, pwm);
+    }
+  }
+  function hideMovers() { spi.setAttribute('opacity', 0); pulse.setAttribute('opacity', 0); chip.setAttribute('opacity', 0); }
+  function rbWrite(slot, b) { var i = slot % 16; rbC[i].setAttribute('class', 'rbc w'); rbT[i].textContent = hx(b); }
+  function rbRead(slot) { rbC[slot % 16].setAttribute('class', 'rbc r'); }
+  function setPtr(id, slot) { $(id).setAttribute('x', cellX(slot % 16)); }
+  function showState(r) {
+    STN.forEach(function (n) { stR[n].setAttribute('class', 'pill'); stT[n].setAttribute('class', 'c s pt'); });
+    if (r.from === 'CHECKSUM') stR.CHECKSUM.setAttribute('class', 'pill ' + (r.err ? 'bad' : 'good'));
+    if (r.from === 'SYNC' && r.err) stR.SYNC.setAttribute('class', 'pill bad');
+    stR[r.to].setAttribute('class', 'pill on'); stT[r.to].setAttribute('class', 'c s pt on');
+    if (r.from === 'CHECKSUM') stT.CHECKSUM.setAttribute('class', 'c s pt on');
+    if (r.from === 'SYNC' && r.err) stT.SYNC.setAttribute('class', 'c s pt on');
+  }
+  function renderBox(a, b, c, d) { T('sim-r0', a); T('sim-r1', b || ''); T('sim-r2', c || ''); T('sim-r3', d || ''); }
+
+  /* ---------- firmware state model ---------- */
+  var S, P;
+  function initState() {
+    S = { r: 255, g: 100, b: 0, gb: 255, en: true, ind: 'NONE', ospInd: false, avas: false, frames: 0, errors: 0, breaks: 0, head: 0 };
+    P = { st: 'IDLE', raw: -1, len: 0, data: [] };
+  }
+  function parse(b, fe) {            // LIN_Slave_Process(), one ring-buffer entry
+    var r = { from: P.st, note: '', err: false, frame: null };
+    if (fe && b === 0) { S.breaks++; P.st = 'BREAK'; r.note = 'break with FERIF restarts the frame'; }
+    else switch (P.st) {
+      case 'IDLE':
+        if (b === 0) { P.st = 'BREAK'; r.note = '0x00 without FERIF → BREAK (fallback path used by the HMI)'; }
+        else if (b === 0x55) { P.st = 'SYNC'; r.note = 'sync without break'; }
+        else r.note = 'stray byte 0x' + hx(b) + ' ignored';
+        break;
+      case 'BREAK':
+        if (b === 0x55) { P.st = 'SYNC'; r.note = 'sync byte 0x55 OK'; }
+        else if (b !== 0) { P.st = 'IDLE'; r.note = '0x' + hx(b) + ' is not 0x55 → IDLE'; r.err = true; }
+        else r.note = '0x00 again, stay in BREAK';
+        break;
+      case 'SYNC':
+        P.raw = b & 0x3F;
+        if (pidOf(P.raw) === b) { P.len = dlen(P.raw); P.data = []; P.st = 'DATA'; r.note = 'PID 0x' + hx(b) + ' parity OK → ID 0x' + hx(P.raw) + ', ' + P.len + ' data bytes'; }
+        else { S.errors++; P.st = 'IDLE'; r.err = true; r.note = 'PID 0x' + hx(b) + ' parity wrong (expected 0x' + hx(pidOf(P.raw)) + ') → error_count++'; }
+        break;
+      case 'DATA':
+        P.data.push(b); r.note = 'D' + (P.data.length - 1) + ' = 0x' + hx(b);
+        if (P.data.length >= P.len) P.st = 'CHECKSUM';
+        break;
+      case 'CHECKSUM':
+        var e = chk(P.data);
+        if (b === e) { S.frames++; r.frame = { raw: P.raw, data: P.data.slice() }; r.note = 'classic checksum 0x' + hx(b) + ' OK → frame_count++, callback'; }
+        else { S.errors++; r.err = true; r.note = 'checksum 0x' + hx(b) + ' ≠ 0x' + hx(e) + ' → frame dropped, error_count++'; }
+        P.st = 'IDLE';
+        break;
+    }
+    r.to = P.st; r.raw = P.raw; r.data = P.data.slice();
+    return r;
+  }
+  function handle(f) {               // LIN_FrameHandler() in audio_demo.c
+    var d = f.data, sig = d[0], v = d[3];
+    var H = { lines: ['ID 0x22 · signal 0x' + hx(sig), '', ''], logs: ['LIN_FrameHandler(): ID 0x22, D0 = 0x' + hx(sig) + ', AVAS_LinAlive()'], jobs: [], dbg: '' };
+    function ledDemo() {           // OSP_SwitchToLedDemo()
+      S.avas = false; S.ind = 'NONE'; S.en = true;
+      if (S.ospInd) { S.ospInd = false; H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_UpdateStrip(): indicator ended, broadcast clear first' }); }
+    }
+    if (f.raw !== 0x22) { H.lines = ['ID 0x' + hx(f.raw) + ' ignored', 'only 0x22 is handled', '']; H.jobs.push({ t: 'none', l: ['', 'frame ignored', ''], log: 'Frame ID is not 0x22, nothing to do' }); return H; }
+    switch (sig) {
+      case 0x01:
+        if (v === 0) { ledDemo(); H.lines[1] = 'OSP_SwitchToLedDemo()'; H.lines[2] = 'OSP_Audio_Enable(true)'; H.dbg = '[LIN] LED power ON'; H.jobs.push({ t: 'static' }); }
+        else { S.en = false; H.lines[1] = 'OSP_Audio_Enable(false)'; H.lines[2] = '+ osp_SETPWM(0, 0, 0, 0)'; H.dbg = '[LIN] LED power OFF';
+          H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_Audio_Enable(false): broadcast all LEDs off' }, { t: 'bc', p: OFF, why: 'Handler sends osp_SETPWM(0, 0, 0, 0) once more', fast: true }); }
+        break;
+      case 0x08:
+        ledDemo(); H.lines[1] = 'SetSyncMode(STATIC)'; H.lines[2] = 'SetEffectMode(STATIC)'; H.dbg = '[LIN] Effect 0'; H.jobs.push({ t: 'static' }); break;
+      case 0x09:
+        ledDemo(); S.r = d[1]; S.g = d[2]; S.b = d[3]; H.lines[1] = 'OSP_SwitchToLedDemo()'; H.lines[2] = 'SetRGBColor(' + d[1] + ', ' + d[2] + ', ' + d[3] + ')';
+        H.dbg = '[LIN] RGB ' + d[1] + ' ' + d[2] + ' ' + d[3]; H.jobs.push({ t: 'static' }); break;
+      case 0x0A:
+        ledDemo(); var pct = Math.min(v, 100); S.gb = Math.floor(pct * 255 / 100);
+        H.lines[1] = 'SetBrightness(' + S.gb + ')'; H.lines[2] = pct + ' % × 255 / 100'; H.dbg = '[LIN] Brightness ' + pct + '%'; H.jobs.push({ t: 'static' }); break;
+      case 0x10:
+        if (v === 1) { S.avas = true; S.en = false; H.lines[1] = 'AVAS_SetEnable(true), ENGINE'; H.lines[2] = 'OSP_Audio_Enable(false)'; H.dbg = '[LIN] AVAS ON';
+          H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_Audio_Enable(false): VU / style output off' },
+                      S.ind !== 'NONE'
+                        ? { t: 'none', l: ['indicator still active', 'indicator > AVAS priority', 'it keeps drawing'], log: 'The ' + S.ind.toLowerCase() + ' indicator has priority over AVAS in OSP_UpdateStrip(), so it keeps drawing on the strip. The engine sound starts in the audio path.' }
+                        : { t: 'none', l: ['ENGINE_OSP_TACHOMETER = 0', 'strip stays dark', 'engine sound fades in'], log: 'No more OSP traffic: the tachometer is disabled at compile time. The engine sound now runs in the audio path (RefEngine_Fill → FIFO → 48 kHz ISR → PWM out).' }); }
+        break;
+      case 0x11:
+        var rpm = (d[1] << 8) | d[2]; H.lines[1] = 'AVAS_SetTargetRPM(' + rpm + ')'; H.lines[2] = S.avas ? 'engine ramps to the new RPM' : 'AVAS is off: target stored'; H.dbg = '[LIN] RPM ' + rpm;
+        H.jobs.push({ t: 'none', l: ['audio path only', 'RPM 900..5500 clamp', 'no LED telegram'], log: 'RPM changes only the engine synth; there is no OSP traffic for this command.' }); break;
+      case 0x20: case 0x22:
+        var tgt = sig === 0x20 ? 'LEFT' : 'PARKING', on = v === 1;
+        if (on === (S.ind === tgt)) { H.lines[1] = 'Indicator ' + tgt + ' ' + (on ? 'ON' : 'OFF'); H.lines[2] = 'no change → ignored';
+          H.jobs.push({ t: 'none', l: ['edge-triggered', 'same state as before', 'nothing re-sent'], log: 'Repeated indicator frame with no state change is ignored (edge-triggered)' }); break; }
+        if (on) {
+          S.ind = tgt; H.lines[1] = 'Indicator_Set(' + tgt + ')'; H.lines[2] = 'other indicators OFF, tick on'; H.dbg = '[LIN] Indicator ' + tgt + ' ON';
+          if (!S.ospInd) H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_UpdateStrip(): first indicator pass, clear the effect', fast: true });
+          S.ospInd = true; H.jobs.push({ t: tgt === 'LEFT' ? 'wave' : 'park' });
+        } else {
+          S.ind = 'NONE'; S.en = false; H.lines[1] = 'Indicator_Set(NONE)'; H.lines[2] = 'OSP_Audio_Enable(false)'; H.dbg = '[LIN] Indicator ' + tgt + ' OFF';
+          H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_Audio_Enable(false): broadcast off' });
+          if (S.ospInd) { S.ospInd = false; H.jobs.push({ t: 'bc', p: OFF, why: 'OSP_UpdateStrip(): indicator ended, clear again', fast: true }); }
+          H.jobs.push({ t: 'none', l: ['strip dark', 'send an LED command', 'to restart the effect'], log: 'Strip stays dark until the next LED command (power ON, style, colour, brightness)' });
+        }
+        break;
+    }
+    return H;
+  }
+
+  /* ---------- step queue / player ---------- */
+  var Q = [], qi = 0, cur = null, el0 = 0, last = 0, playing = false, running = false, simUs = 0, speed = 1, ALL = false;
+  function add(dur, on, tick, us) { Q.push({ dur: dur, on: on, tick: tick, us: us || 0 }); }
+  function startStep() { if (qi >= Q.length) { cur = null; finishRun(); return; } cur = Q[qi]; el0 = 0; if (cur.on) cur.on(); if (cur.tick) cur.tick(0); }
+  function endStep() { var c = cur; if (c.tick) c.tick(1); simUs += c.us; T('sim-time', fmtT(simUs)); qi++; startStep(); }
+  function loop(ts) {
+    if (!playing) return;
+    var budget = Math.min(64, ts - last) * speed; last = ts;
+    while (cur && playing) {
+      var rem = cur.dur - el0;
+      if (budget >= rem) { budget -= rem; endStep(); }
+      else { el0 += budget; if (cur.tick) cur.tick(el0 / cur.dur); break; }
+    }
+    if (cur && playing) requestAnimationFrame(loop);
+  }
+  function play() { playing = true; last = performance.now(); requestAnimationFrame(loop); buttons(); }
+  function finishRun() { running = false; playing = false; act([]); hideMovers(); phase('Done'); log('Done. Simulated time ' + fmtT(simUs) + '.', 'g'); buttons(); }
+  function buttons() {
+    $('sim-send').disabled = running; $('sim-pause').disabled = !running; $('sim-step').disabled = !running || playing;
+    $('sim-pause').textContent = playing ? 'Pause' : 'Resume';
+  }
+
+  function tgSteps(a, pwm, detail, why) {
+    var t = telegram(a, pwm[0], pwm[1], pwm[2]);
+    if (detail) {
+      add(1000, function () { act(['sim-tg']); hideMovers(); phase('osp_SETPWM() builds the telegram'); showTg(t, a, pwm); T('sim-man', 'Manchester …');
+        if (why) log(why);
+        log('osp_SETPWM(0x' + h4(pwm[0]) + ', 0x' + h4(pwm[1]) + ', 0x' + h4(pwm[2]) + ', ' + (a ? a : '0 = broadcast') + ') → ' + hxs(t) + ' (CRC-8 0x' + hx(t[9]) + ')'); });
+      add(800, function () { showMan(t); log('Manchester (bit 1 → 01, bit 0 → 10): 10 → 20 bytes, FF pad on each side = 22 bytes'); });
+      add(1400, function () { phase('SPI2 DMA → OSP strip'); T('sim-spi-t', a ? 'LED ' + a : 'ALL');
+        log('DMA_OSP_TX_DATA(): IRQs off ~2 µs for the trigger, SPI2 sends 22 bytes (37 µs), 50 µs delay. ' + (a ? 'LED ' + a + ' takes it; the others pass it on.' : 'Every LED takes the broadcast.')); },
+        function (p) { spiAnim(p, a, pwm); }, 90);
+    } else {
+      var dur = ALL ? 900 : 45;
+      add(dur, function () { hideMovers(); showTg(t, a, pwm); showMan(t); if (why) log(why + ' → ' + hxs(t)); T('sim-spi-t', a ? 'LED ' + a : 'ALL'); },
+        function (p) { if (ALL) spiAnim(p, a, pwm); else if (p >= 1) applyLeds(a, pwm); }, 90);
+    }
+  }
+  function addJob(j) {
+    if (j.t === 'bc') { tgSteps(0, j.p, !j.fast, j.why); return; }
+    if (j.t === 'none') { add(1600, function () { act(['sim-rd']); phase('No LED traffic'); renderBox('No OSP traffic', j.l[0], j.l[1], j.l[2]); log(j.log); }); return; }
+    if (j.t === 'static') {
+      if (!S.en) return;
+      var pwm = [osp15(S.r, S.gb), osp15(S.g, S.gb), osp15(S.b, S.gb)];
+      add(1000, function () { act(['sim-rd']); phase('Render (main loop)'); renderBox('render_effect_static()', 'every 10th UpdateLEDs call', 'LED 1..' + N + ', one telegram each', 'colour × brightness → 14 bit');
+        log('OSP_Audio_UpdateLEDs(): STATIC mode, static_effect_counter reaches 10 → render_effect_static(), ' + N + ' telegrams'); });
+      for (var n = 1; n <= N; n++) tgSteps(n, pwm, ALL || n <= 2, n === 3 && !ALL ? 'Fast-forward LED 3..' + N + ' (same colour)' : null);
+      add(600, function () { act(['sim-rd']); log('Strip complete: ' + N + ' telegrams ≈ ' + (N * 0.09).toFixed(1) + ' ms of main-loop time', 'g'); });
+      return;
+    }
+    if (j.t === 'wave') {
+      for (var tick = 0; tick < 2; tick++) (function (tick) {
+        add(900, function () { act(['sim-rd']); phase('Indicator wave'); renderBox('OSP_UpdateStrip()', 'tick ' + (tick + 1) + ' (every 700 ms)', 'pos 0: osp_SETPWM(0,0,0,0)', 'then +1 LED every 25 ms');
+          log('Indicator tick ' + (tick + 1) + ': pos = 0 → broadcast clear, tick sound starts'); });
+        tgSteps(0, OFF, false, null);
+        for (var pos = 1; pos <= 21; pos++) (function (pos) {
+          if (tick === 0 && pos === 1) {
+            add(700, function () { renderBox('OSP_DrawIndicatorWave()', 'LEFT, pos 1', 'LED 1..21 off, LED 22 yellow', '42 telegrams per step');
+              log('OSP_DrawIndicatorWave(LEFT, pos 1): sends all 42 LEDs (≈ 3.8 ms). Detail for LED 22:'); });
+            tgSteps(22, YEL, true, null);
+            add(300, null, null, 25000 - 90);
+          } else {
+            add(ALL ? 450 : 150, function () { phase('Indicator wave, pos ' + pos); renderBox('OSP_DrawIndicatorWave()', 'LEFT, pos ' + pos, 'LED 22..' + (21 + pos) + ' yellow', '42 telegrams per step');
+              hideMovers(); var t = telegram(21 + pos, YEL[0], YEL[1], YEL[2]); showTg(t, 21 + pos, YEL); showMan(t);
+              for (var k = 22; k <= 21 + pos; k++) setLed(k, YEL); }, null, 25000);
+          }
+        })(pos);
+        add(900, function () { renderBox('OSP_DrawIndicatorWave()', 'pos ≥ 26: wave finished', 'strip holds', 'until the next tick');
+          log('Wave reached LED 42 after 21 × 25 ms; hold until the next 700 ms tick'); }, null, 700000 - 21 * 25000);
+      })(tick);
+      add(500, function () { log('The wave repeats every 700 ms until Left indicator OFF is received', 'g'); });
+      return;
+    }
+    if (j.t === 'park') {
+      for (var c = 0; c < 2; c++) (function (c) {
+        tgSteps(0, YEL, c === 0, c === 0 ? 'Parking strobe ON: broadcast yellow to all LEDs' : 'Parking ON (broadcast)');
+        add(1000, function () { act(['sim-rd']); phase('Parking strobe'); renderBox('OSP_UpdateStrip()', 'parking ON phase, 500 ms', 'same broadcast re-sent', 'every 25 ms');
+          if (c === 0) log('Re-sent every 25 ms (IND_PARK_REFRESH_MS), so one lost telegram is fixed within 25 ms'); }, null, 500000);
+        tgSteps(0, OFF, false, 'Parking OFF (broadcast)');
+        add(1000, function () { renderBox('OSP_UpdateStrip()', 'parking OFF phase, 500 ms', '', ''); }, null, 500000);
+      })(c);
+      add(500, function () { log('The strobe repeats every second until Parking OFF is received', 'g'); });
+    }
+  }
+
+  function cmdDef(k) {
+    var hv = $('sim-col').value, c = [parseInt(hv.substr(1, 2), 16), parseInt(hv.substr(3, 2), 16), parseInt(hv.substr(5, 2), 16)];
+    var v = Math.max(0, Math.min(100, parseInt($('sim-val').value, 10) || 0));
+    return {
+      rgb: { d: [0x09, c[0], c[1], c[2]], label: 'RGB ' + c.join(' ') }, style: { d: [0x08, 0, 0, 0], label: 'Style STATIC' },
+      bright: { d: [0x0A, 0, 0, v], label: 'Bright ' + v + ' %' }, on: { d: [0x01, 0, 0, 0], label: 'LED ON' }, off: { d: [0x01, 0, 0, 1], label: 'LED OFF' },
+      left: { d: [0x20, 0, 0, 1], label: 'Left ON' }, leftoff: { d: [0x20, 0, 0, 0], label: 'Left OFF' }, park: { d: [0x22, 0, 0, 1], label: 'Parking ON' },
+      avas: { d: [0x10, 0, 0, 1], label: 'AVAS ON' }, rpm: { d: [0x11, 0x0B, 0xB8, 0], label: 'RPM 3000' }
+    }[k];
+  }
+
+  function build(cmd, fault) {
+    Q = []; qi = 0; ALL = $('sim-all').checked;
+    var pid = fault === 'pid' ? 0xE3 : 0xE2, ck = chk(cmd.d);
+    if (fault === 'chk') ck ^= 0x01;
+    var bytes = [0x00, 0x55, pid].concat(cmd.d, [ck]);
+    var names = ['break', 'sync', 'PID', 'D0', 'D1', 'D2', 'D3', 'checksum'];
+    add(1000, function () { act(['sim-hmi']); phase('HMI builds the frame'); T('sim-hmi-sub', cmd.label); T('sim-bytes', hxs(bytes));
+      log('HMI: ' + cmd.label + ' → send_frame() writes ' + hxs(bytes) + ' to /dev/ttyS2' + (fault !== 'none' ? '  [fault injected: wrong ' + (fault === 'chk' ? 'checksum' : 'PID parity') + ']' : ''), fault !== 'none' ? 'x' : ''); });
+    var frame = null;
+    bytes.forEach(function (b, k) {
+      var slot = S.head; S.head = (S.head + 1) % 64;
+      add(900, function () { act(['sim-mst', 'sim-slv']); phase('LIN bus: ' + names[k]); hideMovers(); chip.setAttribute('opacity', 1); T('sim-chip-t', hx(b)); drawWave(b);
+        log('LIN bus: ' + names[k] + ' 0x' + hx(b) + (k === 0 ? ' (plain UART 0x00: 9 low bits + stop bit, so no framing error)' : '')); },
+        function (p) { chip.setAttribute('transform', 'translate(' + (292 + p * 372) + ',0)'); }, 86.8);
+      add(450, function () { chip.setAttribute('opacity', 0); act(['sim-isr']); phase('UART2 RX ISR'); T('sim-isr-sub', 'FERIF 0 · 0x' + hx(b)); rbWrite(slot, b); setPtr('sim-head', slot + 1);
+        log('ISR: rx_buf[' + slot + '] = 0x0' + hx(b) + ' (bit 8 = FERIF = 0), head = ' + ((slot + 1) % 64)); });
+      var r = parse(b, false), cnt = 'frames ' + S.frames + ' · errors ' + S.errors + ' · breaks ' + S.breaks;
+      if (r.frame) frame = r.frame;
+      var ft = r.frame ? 'frame: ID 0x22  data ' + hxs(r.frame.data) + '  ✓ valid'
+        : r.err ? 'frame: dropped' : (r.to === 'DATA' || r.to === 'CHECKSUM') ? 'frame: ID 0x' + hx(r.raw) + '  data ' + (r.data.length ? hxs(r.data) : '…') : 'frame: —';
+      add(600, function () { act([]); phase('Parser (main loop)'); rbRead(slot); setPtr('sim-tail', slot + 1); showState(r); T('sim-frame', ft); T('sim-cnt', cnt);
+        log('Parser ' + r.from + ' → ' + r.to + ': ' + r.note, r.err ? 'x' : r.frame ? 'g' : ''); });
+    });
+    if (!frame) {
+      add(1600, function () { act(['sim-hd']); phase('Frame dropped'); T('sim-h1', 'not called'); T('sim-h2', 'no valid frame received'); T('sim-h3', 'strip keeps its last state');
+        renderBox('Renderer', 'nothing to do', '', ''); log('LIN_FrameHandler() is not called. Use [LIN] stats (errors=) to see this on the debug UART.', 'x'); });
+      return;
+    }
+    var H = handle(frame);
+    add(1500, function () { act(['sim-hd']); phase('LIN_FrameHandler()'); T('sim-h1', H.lines[0]); T('sim-h2', H.lines[1]); T('sim-h3', H.lines[2]);
+      H.logs.forEach(function (m) { log(m); }); if (H.dbg) log('UART1 debug print "' + H.dbg + '" (LIN_DEBUG = 1)'); });
+    H.jobs.forEach(addJob);
+  }
+
+  function paintIdle() {
+    hideMovers(); act([]); drawWave(null);
+    rbC.forEach(function (c) { c.setAttribute('class', 'rbc'); }); rbT.forEach(function (t) { t.textContent = ''; });
+    setPtr('sim-head', S.head); setPtr('sim-tail', S.head);
+    showState({ from: 'IDLE', to: 'IDLE', err: false });
+    T('sim-frame', 'frame: —'); T('sim-cnt', 'frames 0 · errors 0 · breaks 0');
+    T('sim-hmi-sub', 'idle'); T('sim-isr-sub', '—'); T('sim-h1', '—'); T('sim-h2', ''); T('sim-h3', ''); renderBox('Renderer', '—');
+    tgT.forEach(function (t) { t.textContent = '--'; }); T('sim-tg-t', '—'); T('sim-man', 'Manchester —');
+    var p = [osp15(S.r, S.gb), osp15(S.g, S.gb), osp15(S.b, S.gb)]; applyLeds(0, p);
+    T('sim-bytes', '—'); T('sim-time', fmtT(0)); phase('Ready');
+  }
+  function reset() {
+    playing = false; running = false; Q = []; cur = null; simUs = 0; initState(); paintIdle();
+    logEl.innerHTML = ''; log('Ready. Start state: STATIC style, colour 255 100 0, brightness 100 %, 42 LEDs.'); buttons();
+  }
+
+  $('sim-send').addEventListener('click', function () {
+    if (running) return;
+    var cmd = cmdDef($('sim-cmd').value), fault = $('sim-fault').value;
+    simUs = 0; T('sim-time', fmtT(0)); log('—— Send ' + cmd.label + ' ——');
+    build(cmd, fault); running = true; startStep();
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { playing = false; log('Reduced motion is on: press Step to advance.'); buttons(); } else play();
+  });
+  $('sim-pause').addEventListener('click', function () { if (!running) return; if (playing) { playing = false; buttons(); } else play(); });
+  $('sim-step').addEventListener('click', function () { if (running && !playing && cur) { endStep(); buttons(); } });
+  $('sim-reset').addEventListener('click', reset);
+  $('sim-speed').addEventListener('change', function (e) { speed = parseFloat(e.target.value) || 1; });
+  $('sim-cmd').addEventListener('change', function (e) { var v = e.target.value; $('sim-col-l').hidden = v !== 'rgb'; $('sim-val-l').hidden = v !== 'bright'; });
+  reset();
 })();
 </script>

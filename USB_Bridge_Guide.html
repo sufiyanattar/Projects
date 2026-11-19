@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Marelli USB Bridge Guide</title>
+<title>USB Flashing Bridge Guide</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
@@ -172,6 +172,73 @@ td.mono, td .mono { white-space: nowrap; }
 .btn { font: 700 .9rem/1 var(--f-body); border: 0; background: var(--navy); color: #fff; padding: 13px 20px; cursor: pointer; }
 .btn:hover { background: var(--navy-2); }
 
+/* FlowAnim 1.0 - animated flow tab. Paste inside the page <style>, just before the footer rules.
+   Uses the reference.html tokens (--navy, --red, --line, --panel, --f-body, --f-mono ...). */
+.fa-sc { display: flex; flex-wrap: wrap; gap: 6px; }
+.fa-sc button { font: 600 .82rem/1.2 var(--f-body); border: 1px solid var(--line); background: #fff; color: var(--ink); padding: 9px 12px; cursor: pointer; }
+.fa-sc button:hover { border-color: var(--navy); }
+.fa-sc button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+.fa-sc button:focus-visible, .fa-row input:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
+.fa-row { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
+.fa-row label { display: flex; gap: 8px; align-items: center; font-size: .84rem; font-weight: 600; }
+.fa-row input[type=range] { accent-color: var(--navy); }
+.fa-row output { font: 600 .84rem var(--f-mono); min-width: 3.2em; }
+.btn.fa-ghost { background: #fff; color: var(--navy); border: 1px solid var(--navy); }
+.btn.fa-ghost:hover { background: var(--navy-soft); }
+.fa-cap { min-height: 5.6em; }
+.fa-cap p { max-width: none; }
+.fa-now { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(76,180,231,.5); font-size: .9rem; min-height: 1.7em; }
+.fa-now b { margin-right: 8px; }
+.fa-sw { display: inline-block; width: 14px; height: 14px; vertical-align: -2px; margin-right: 6px; border-radius: 2px; }
+.fig svg .lk { fill: none; stroke: #9aa3ad; stroke-width: 1.6; }
+.fig svg .lk.on { stroke: #1c3460; stroke-width: 2.6; stroke-dasharray: 8 6; animation: fadash .6s linear infinite; }
+.fig svg .lk.on.rev { animation-direction: reverse; }
+.fig svg.fa-paused .lk.on { animation-play-state: paused; }
+@keyframes fadash { to { stroke-dashoffset: -14; } }
+.fig svg .zh { font-size: 11px; font-weight: 700; letter-spacing: .06em; fill: #4a4a4a; }
+.fig svg text.fa-pk-t { fill: #fff; font: 700 10.5px "Source Code Pro", Consolas, monospace; pointer-events: none; }
+.fig svg .pkt { cursor: pointer; }
+.fig svg .pkt.sel rect { stroke: #e31b23; stroke-width: 3; }
+.fa-ins { display: grid; gap: 10px; }
+.fa-ins .byte.pl b { font: 400 .82rem/1.4 var(--f-mono); word-break: break-word; }
+.fa-hint { font-size: .84rem; color: var(--ink-2); }
+.fa-feedbox { border: 1px solid var(--line); background: #fff; margin-top: 10px; }
+.fa-feedhd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; background: var(--navy); color: #fff; padding: 7px 12px; font: 700 .74rem/1.3 var(--f-body); letter-spacing: .04em; text-transform: uppercase; }
+.fa-sp { flex: 1; }
+.fa-live::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ff5a5f; margin-right: 6px; vertical-align: 1px; animation: fablink 1.2s ease-in-out infinite; }
+.fa-live.off::before { background: #9aa3ad; animation: none; }
+@keyframes fablink { 50% { opacity: .25; } }
+.fa-clock { font-family: var(--f-mono); font-weight: 600; }
+.fa-jump { font: 600 .74rem/1 var(--f-body); background: #fff; color: var(--navy); border: 0; padding: 5px 8px; cursor: pointer; }
+.fa-feed { list-style: none; margin: 0; padding: 4px 0; height: 16rem; overflow-y: auto; max-width: none; font-size: .84rem; }
+.fa-feed.short { height: 11rem; }   /* compact feed for a second animation on a busy tab */
+.fa-feed li, .fa-feed li + li { margin: 0; }
+.fa-lb { display: grid; grid-template-columns: 4.8em 1.2em minmax(0, 1fr); gap: 0 8px; width: 100%; text-align: left; background: none; border: 0; border-left: 3px solid transparent; padding: 3px 12px 3px 9px; font: inherit; line-height: 1.45; color: var(--ink); }
+button.fa-lb { cursor: pointer; }
+button.fa-lb:hover { background: var(--navy-soft); }
+button.fa-lb:focus-visible { outline: 2px solid var(--navy); outline-offset: -2px; }
+.fa-t { font: .76rem/1.9 var(--f-mono); color: var(--ink-2); }
+.fa-i { font-weight: 700; text-align: center; }
+.fa-x b { margin-right: 6px; }
+.fa-x small { display: block; font: .72rem/1.4 var(--f-mono); color: var(--ink-2); word-break: break-word; }
+.fa-feed li.phase .fa-lb { background: var(--panel); font-weight: 700; border-left-color: var(--navy); margin-top: 4px; }
+.fa-feed li.drop .fa-x { color: #a3141a; }
+.fa-feed li.replay .fa-lb { color: var(--ink-2); font-style: italic; border-top: 1px dashed var(--line); margin-top: 6px; }
+.fa-feed li.new .fa-lb { animation: fanew 1.4s ease-out; }
+.fa-feed li.sel .fa-lb { background: var(--navy-soft); border-left-color: var(--red); }
+@keyframes fanew { from { background-color: #fff1c2; } }
+@media (prefers-reduced-motion: reduce) { .fig svg .lk.on, .fa-live::before, .fa-feed li.new .fa-lb { animation: none; } }
+
+/* Update Flow animation extras */
+.fa-wrap { display: grid; gap: 34px; min-width: 0; }
+.fa-prog { height: 12px; background: var(--panel); border: 1px solid var(--line); margin-bottom: 10px; }
+.fa-prog i { display: block; height: 100%; width: 0; background: var(--ok); transition: width .4s ease-out; }
+.fa-prog i.er { background: var(--red); }
+td.fa-bad { color: #a3141a; font-weight: 700; }
+td.fa-good { color: var(--ok); font-weight: 700; }
+.fig svg .ln.live { stroke: #1c3460; stroke-width: 1.8; stroke-dasharray: 7 5; animation: fadash .9s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .fig svg .ln.live { animation: none; } }
+
 footer { background: var(--panel); color: var(--ink-2); font-size: .82rem; }
 footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 </style>
@@ -180,7 +247,7 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
   <div class="wrap">
     <div class="brand">
       <div class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v14"/><path d="M8 6l4-4 4 4"/><circle cx="12" cy="19" r="3" fill="#fff"/><path d="M6 10v3l6 3"/><path d="M18 9v4l-6 3"/></svg></div>
-      <h1>Marelli USB Bridge<small>PIC24FJ64GU205 Firmware Update Bridge &middot; Technical Reference</small></h1>
+      <h1>USB Flashing Bridge<small>PIC24FJ64GU205 Firmware Update Bridge &middot; Technical Reference</small></h1>
     </div>
   </div>
 </header>
@@ -200,7 +267,7 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
   </div>
 </nav>
 
-<div class="crumbs"><div class="wrap"><span>Marelli</span><span>USB Bridge</span><span id="crumb">Overview</span></div></div>
+<div class="crumbs"><div class="wrap"><span>USB Flashing Bridge</span><span id="crumb">Overview</span></div></div>
 <div class="hero"><div class="wrap"><h2 id="hero-title">System Overview</h2><p id="hero-lead"></p></div></div>
 <div class="stripe" aria-hidden="true"><span></span><span></span><span></span></div>
 
@@ -232,13 +299,13 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
         <line class="ln" x1="485" y1="162" x2="485" y2="174" marker-end="url(#m11)"/>
         <line class="ln" x1="485" y1="222" x2="485" y2="234" marker-end="url(#m11)"/>
         <!-- pendrive <-> USB OTG -->
-        <line class="ln" x1="190" y1="66" x2="360" y2="66" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <line class="ln live" x1="190" y1="66" x2="360" y2="66" marker-start="url(#m11)" marker-end="url(#m11)"/>
         <text class="c s" x="258" y="58">USB Host (MSD)</text><text class="c s" x="258" y="84">VBUS 5 V out</text>
         <!-- host PC <-> USB OTG -->
-        <path class="ln" d="M190,275 H322 V90 H360" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <path class="ln live" d="M190,275 H322 V90 H360" marker-start="url(#m11)" marker-end="url(#m11)"/>
         <text class="c s" x="256" y="267">USB Device (CDC)</text><text class="c s" x="256" y="293">VBUS from PC</text>
         <!-- protocol <-> target -->
-        <line class="ln" x1="610" y1="198" x2="800" y2="198" marker-start="url(#m11)" marker-end="url(#m11)"/>
+        <line class="ln live" x1="610" y1="198" x2="800" y2="198" marker-start="url(#m11)" marker-end="url(#m11)"/>
         <text class="c s" x="715" y="189">UART2 &middot; 115 200 8N1</text><text class="c s" x="715" y="215">RB2 TX / RB3 RX</text>
         <rect class="bx" x="800" y="148" width="180" height="100"/>
         <text class="c b" x="890" y="174">Traveo II C 6M</text><text class="c s" x="890" y="193">Bootloader + application</text>
@@ -251,7 +318,9 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
         <text class="c s" x="750" y="312">UART1 debug</text><text class="c s" x="750" y="337">RC9 TX</text>
         <rect class="gr" x="800" y="300" width="180" height="40"/><text class="c" x="890" y="325">Debug terminal (PC)</text>
       </svg></div>
+      <div class="legend"><span>Dashed blue = data path of a firmware update</span></div>
     </div>
+    <div class="note"><strong>See the update run step by step</strong><p>The Update Flow tab animates every frame between pendrive or PC, bridge and target, with byte-level frame contents and error cases.</p><p style="margin-top:10px"><button type="button" class="btn fa-ghost" data-goto="flow">Open the animated walkthrough</button></p></div>
   </div>
 
   <div class="grid2">
@@ -266,11 +335,11 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
           <tr><td class="k">Clock</td><td>FRC 8 MHz &rarr; 96 MHz PLL &divide;2 &rarr; F<sub>OSC</sub> 32 MHz, F<sub>CY</sub> 16 MHz</td></tr>
           <tr><td class="k">USB</td><td>Full-Speed, Host (MSD) + Device (CDC), polled (<code>_USB1IE = 0</code>)</td></tr>
           <tr><td class="k">File system</td><td>MLA FILEIO, drive <code>'A'</code>, 8.3 names, <code>*.BIN</code></td></tr>
-          <tr><td class="k">Target link</td><td>UART2, 115 200 baud 8N1 (BRGH = 1, U2BRG = 34 &rarr; 114 286 baud, &minus;0.8 %)</td></tr>
+          <tr><td class="k">Target link</td><td>UART2, 115 200 baud 8N1 (BRGH = 1, U2BRG = 34 &rarr; 114 286 baud, &minus;0.8 %); RX/TX interrupt-driven, 64-byte queues, priority 1</td></tr>
           <tr><td class="k">Frame</td><td><code>0xAA</code> &hellip; <code>0x55</code>, 16-bit additive checksum</td></tr>
           <tr><td class="k">Payload</td><td class="num">64 B internal flash / 16 B external flash</td></tr>
           <tr><td class="k">Retries</td><td class="num">3 per frame (<code>PROTOCOL_MAX_RETRIES</code>)</td></tr>
-          <tr><td class="k">Debug</td><td>UART1, 115 200 baud (RC9 TX, RA11 RX)</td></tr>
+          <tr><td class="k">Debug</td><td>UART1, 115 200 baud (RC9 TX, RA11 RX), interrupt-driven, 64-byte queues</td></tr>
           </tbody>
         </table></div>
       </div>
@@ -342,15 +411,38 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
     <h3><span class="n">2.2</span>How the projects connect</h3>
     <div>
       <p class="cap">Figure 2-1: <span>Bench test set-up</span></p>
-      <div class="flow">
-        <div class="node"><b>tools/</b><small>firmware_sender_gui.py, hex2bin_dspic.py</small></div>
-        <div class="link">USB CDC</div>
-        <div class="node hl"><b>USB_Bridge.X</b><small>PIC24FJ64GU205 Curiosity</small></div>
-        <div class="link">UART</div>
-        <div class="node"><b>dspic33_app.X</b><small>running app, 0x810000</small></div>
-        <div class="link">flag + reset</div>
-        <div class="node"><b>dspic33_target.X</b><small>bootloader, 0x800000</small></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 1180 420" style="min-width:820px" role="img" aria-label="Bench test set-up: PC tools or pendrive, PIC24 bridge, dsPIC33AK target with application and bootloader">
+        <defs><marker id="m21" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <rect class="bx" x="20" y="110" width="200" height="80"/>
+        <text class="c b" x="120" y="138">Host PC</text><text class="c s" x="120" y="158">tools/firmware_sender_gui.py</text><text class="c s" x="120" y="175">hex2bin_dspic.py</text>
+        <rect class="bx" x="20" y="215" width="200" height="70"/>
+        <text class="c b" x="120" y="243">USB pendrive</text><text class="c s" x="120" y="263">APP.BIN &middot; FAT32</text>
+        <line class="ln" x1="220" y1="150" x2="390" y2="150" marker-start="url(#m21)" marker-end="url(#m21)"/>
+        <text class="c s" x="305" y="142">USB Device &middot; CDC</text><text class="c s" x="305" y="168">virtual COM port</text>
+        <line class="ln" x1="220" y1="250" x2="390" y2="250" marker-start="url(#m21)" marker-end="url(#m21)"/>
+        <text class="c s" x="305" y="242">USB Host &middot; MSD</text><text class="c s" x="305" y="268">VBUS 5 V from bridge</text>
+        <rect class="hl" x="390" y="100" width="220" height="200"/>
+        <text class="c b" x="500" y="180">USB_Bridge.X</text><text class="c s" x="500" y="200">PIC24FJ64GU205</text><text class="c s" x="500" y="218">Curiosity EV10K72A</text>
+        <line class="ln" x1="610" y1="200" x2="760" y2="200" marker-start="url(#m21)" marker-end="url(#m21)"/>
+        <text class="c s" x="685" y="192">UART2 &middot; 115 200 8N1</text><text class="c s" x="685" y="218">RB2/RB3 &harr; RB11/RB10</text>
+        <rect class="gr" x="760" y="30" width="400" height="300"/>
+        <text class="c b" x="960" y="54">dsPIC33AK128MC106 board</text><text class="c s" x="960" y="70">stand-in for Traveo II</text>
+        <rect class="bx" x="800" y="90" width="320" height="65"/>
+        <text class="c b" x="960" y="117">dspic33_app.X</text><text class="c s" x="960" y="137">application &middot; 0x810000</text>
+        <rect class="bx" x="800" y="245" width="320" height="65"/>
+        <text class="c b" x="960" y="272">dspic33_target.X</text><text class="c s" x="960" y="292">bootloader &middot; 0x800000</text>
+        <line class="ln ds" x1="960" y1="155" x2="960" y2="245" marker-end="url(#m21)"/>
+        <text class="s" x="972" y="197">flag 0xB00710AD @ 0x4000</text><text class="s" x="972" y="213">+ software reset</text>
+        <line class="ln ds" x1="880" y1="245" x2="880" y2="155" marker-end="url(#m21)"/>
+        <text class="e s" x="868" y="197">JumpToApp()</text><text class="e s" x="868" y="213">after update</text>
+        <line class="ln" x1="500" y1="300" x2="500" y2="370" marker-end="url(#m21)"/>
+        <text class="s" x="512" y="340">UART1 &middot; RC9 TX</text>
+        <rect class="gr" x="400" y="370" width="200" height="40"/><text class="c" x="500" y="395">Debug terminal (PC)</text>
+        <line class="ln" x1="960" y1="330" x2="960" y2="370" marker-end="url(#m21)"/>
+        <text class="s" x="972" y="355">UART2 &middot; RD1 TX</text>
+        <rect class="gr" x="860" y="370" width="200" height="40"/><text class="c" x="960" y="395">Debug terminal (PC)</text>
+      </svg></div>
+      <div class="legend"><span>Solid arrow = interface</span><span>Dashed arrow = reset or jump inside the target</span><span>The bridge uses the PC (Device mode) or the pendrive (Host mode)</span></div>
     </div>
   </div>
 
@@ -433,13 +525,29 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
     <h3><span class="n">3.4</span>VBUS power path (Host mode)</h3>
     <div>
       <p class="cap">Figure 3-2: <span>VBUS supply to the pendrive</span></p>
-      <div class="flow">
-        <div class="node"><b>5 V rail</b><small>board supply</small></div>
-        <div class="link">IN</div>
-        <div class="node hl"><b>Load switch</b><small>e.g. TPS2051B, current limited</small></div>
-        <div class="link">VBUS 5 V</div>
-        <div class="node"><b>USB-A receptacle</b><small>pendrive</small></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 920 330" style="min-width:700px" role="img" aria-label="VBUS power path: 5 V rail, load switch, USB-A receptacle, controlled by PIC24 RB8 and sensed on RB6">
+        <defs><marker id="m32" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <rect class="bx" x="20" y="60" width="160" height="70"/>
+        <text class="c b" x="100" y="90">5 V rail</text><text class="c s" x="100" y="110">board supply</text>
+        <line class="ln" x1="180" y1="95" x2="340" y2="95" marker-end="url(#m32)"/>
+        <text class="c s" x="260" y="87">5 V</text><text class="c s" x="260" y="113">to IN</text>
+        <rect class="hl" x="340" y="50" width="200" height="90"/>
+        <text class="c b" x="440" y="80">Load switch</text><text class="c s" x="440" y="98">e.g. TPS2051B</text><text class="c s" x="440" y="114">current limited</text>
+        <text class="s" x="348" y="99">IN</text><text class="e s" x="532" y="99">OUT</text><text class="c s" x="440" y="134">EN</text>
+        <line class="ln" x1="540" y1="95" x2="700" y2="95" marker-end="url(#m32)"/>
+        <text class="c s" x="610" y="87">VBUS 5 V &plusmn;5 %</text><text class="c s" x="610" y="113">100&ndash;500 mA</text>
+        <rect class="bx" x="700" y="60" width="190" height="70"/>
+        <text class="c b" x="795" y="90">USB-A receptacle</text><text class="c s" x="795" y="110">to the pendrive</text>
+        <rect class="bx" x="300" y="230" width="280" height="70"/>
+        <text class="c b" x="440" y="258">PIC24FJ64GU205</text><text class="c s" x="440" y="278">USB OTG module</text>
+        <line class="ln" x1="440" y1="230" x2="440" y2="140" marker-end="url(#m32)"/>
+        <text class="s" x="452" y="182">RB8 (USBOEN)</text><text class="s" x="452" y="198">drives switch EN</text>
+        <circle cx="660" cy="95" r="3.5" fill="#000"/>
+        <path class="ln" d="M660,95 V265 H580" marker-end="url(#m32)"/>
+        <text class="s" x="672" y="182">RB6 &middot; VBUS sense</text><text class="s" x="672" y="198">Host or Device at power-up</text>
+        <path class="ln" d="M580,285 H860 V130" marker-start="url(#m32)" marker-end="url(#m32)"/>
+        <text class="c s" x="720" y="305">USB D+ RB10 &middot; D&minus; RB11</text>
+      </svg></div>
       <p style="margin-top:8px;font-size:.88rem;color:var(--ink-2)">Switch EN is driven from RB8 (USBOEN). RB6 senses VBUS at power-up to decide between Host and Device mode.</p>
     </div>
     <div class="tbl"><table>
@@ -462,31 +570,61 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
     <h3><span class="n">4.1</span>Software layers</h3>
     <div>
       <p class="cap">Figure 4-1: <span>Firmware layer diagram</span></p>
-      <div class="layers">
-        <div class="layer"><div class="lname">Application</div><div class="cells">
-          <div class="cell"><b>Mode detect + super-loop</b><small>main.c: main(), VBUS_IsPresent()</small></div>
-          <div class="cell"><b>Host state machine</b><small>main.c: APP_Tasks()</small></div>
-          <div class="cell"><b>Device state machine</b><small>main.c: DEV_Tasks()</small></div>
-        </div></div>
-        <div class="layer"><div class="lname">Protocol</div><div class="cells">
-          <div class="cell"><b>Bootloader protocol</b><small>bootloader_protocol.c/.h: frame TX/RX, checksum, waits</small></div>
-        </div></div>
-        <div class="layer"><div class="lname">Middleware (MLA)</div><div class="cells">
-          <div class="cell"><b>FILEIO</b><small>fileio.c, fileio_config.h</small></div>
-          <div class="cell"><b>USB Host MSD</b><small>usb_host.c, usb_host_msd.c, usb_host_msd_scsi.c</small></div>
-          <div class="cell"><b>USB Device CDC</b><small>usb_device.c, usb_device_cdc.c, usb_descriptors.c</small></div>
-        </div></div>
-        <div class="layer"><div class="lname">HAL / drivers</div><div class="cells">
-          <div class="cell"><b>USB HAL</b><small>usb_hal_16bit.c, usb_config.c</small></div>
-          <div class="cell"><b>MCC</b><small>system.c, clock.c, pin_manager.c, uart1.c, uart2.c</small></div>
-        </div></div>
-        <div class="layer hw"><div class="lname">Hardware</div><div class="cells">
-          <div class="cell"><b>USB OTG</b><small>RB10/RB11</small></div>
-          <div class="cell"><b>UART2</b><small>RB2/RB3</small></div>
-          <div class="cell"><b>UART1</b><small>RC9/RA11</small></div>
-          <div class="cell"><b>GPIO</b><small>RB6, RB8, RC1</small></div>
-        </div></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 1100 480" style="min-width:820px" role="img" aria-label="Firmware layers from application down to hardware">
+        <rect x="10" y="10" width="170" height="84" style="fill:#1c3460;stroke:#1c3460"/>
+        <text class="b" x="22" y="56" style="fill:#fff;font-size:12px;letter-spacing:.04em">APPLICATION</text>
+        <rect class="bx" x="195.0" y="10" width="291.7" height="84"/>
+        <text class="c b" x="340.8" y="46">Mode detect + super-loop</text>
+        <text class="c m" x="340.8" y="66">main.c: main(), VBUS_IsPresent()</text>
+        <rect class="bx" x="496.7" y="10" width="291.7" height="84"/>
+        <text class="c b" x="642.5" y="46">Host state machine</text>
+        <text class="c m" x="642.5" y="66">main.c: APP_Tasks()</text>
+        <rect class="bx" x="798.3" y="10" width="291.7" height="84"/>
+        <text class="c b" x="944.2" y="46">Device state machine</text>
+        <text class="c m" x="944.2" y="66">main.c: DEV_Tasks()</text>
+        <rect x="10" y="104" width="170" height="84" style="fill:#1c3460;stroke:#1c3460"/>
+        <text class="b" x="22" y="150" style="fill:#fff;font-size:12px;letter-spacing:.04em">PROTOCOL</text>
+        <rect class="bx" x="195.0" y="104" width="895.0" height="84"/>
+        <text class="c b" x="642.5" y="140">Bootloader protocol</text>
+        <text class="c m" x="642.5" y="160">bootloader_protocol.c/.h: frame TX/RX, checksum, waits</text>
+        <rect x="10" y="198" width="170" height="84" style="fill:#1c3460;stroke:#1c3460"/>
+        <text class="b" x="22" y="244" style="fill:#fff;font-size:12px;letter-spacing:.04em">MIDDLEWARE (MLA)</text>
+        <rect class="bx" x="195.0" y="198" width="291.7" height="84"/>
+        <text class="c b" x="340.8" y="234">FILEIO</text>
+        <text class="c m" x="340.8" y="254">fileio.c, fileio_config.h</text>
+        <rect class="bx" x="496.7" y="198" width="291.7" height="84"/>
+        <text class="c b" x="642.5" y="228">USB Host MSD</text>
+        <text class="c m" x="642.5" y="248">usb_host.c, usb_host_msd.c,</text>
+        <text class="c m" x="642.5" y="264">usb_host_msd_scsi.c</text>
+        <rect class="bx" x="798.3" y="198" width="291.7" height="84"/>
+        <text class="c b" x="944.2" y="228">USB Device CDC</text>
+        <text class="c m" x="944.2" y="248">usb_device.c, usb_device_cdc.c,</text>
+        <text class="c m" x="944.2" y="264">usb_descriptors.c</text>
+        <rect x="10" y="292" width="170" height="84" style="fill:#1c3460;stroke:#1c3460"/>
+        <text class="b" x="22" y="338" style="fill:#fff;font-size:12px;letter-spacing:.04em">HAL / DRIVERS</text>
+        <rect class="bx" x="195.0" y="292" width="442.5" height="84"/>
+        <text class="c b" x="416.2" y="328">USB HAL</text>
+        <text class="c m" x="416.2" y="348">usb_hal_16bit.c, usb_config.c</text>
+        <rect class="bx" x="647.5" y="292" width="442.5" height="84"/>
+        <text class="c b" x="868.8" y="322">MCC</text>
+        <text class="c m" x="868.8" y="342">system.c, clock.c, pin_manager.c,</text>
+        <text class="c m" x="868.8" y="358">interrupt_manager.c, uart1.c, uart2.c, delay.c</text>
+        <rect x="10" y="386" width="170" height="84" style="fill:#1c3460;stroke:#1c3460"/>
+        <text class="b" x="22" y="432" style="fill:#fff;font-size:12px;letter-spacing:.04em">HARDWARE</text>
+        <rect class="gr" x="195.0" y="386" width="216.2" height="84"/>
+        <text class="c b" x="303.1" y="422">USB OTG</text>
+        <text class="c m" x="303.1" y="442">RB10/RB11</text>
+        <rect class="gr" x="421.2" y="386" width="216.2" height="84"/>
+        <text class="c b" x="529.4" y="422">UART2</text>
+        <text class="c m" x="529.4" y="442">RB2/RB3</text>
+        <rect class="gr" x="647.5" y="386" width="216.2" height="84"/>
+        <text class="c b" x="755.6" y="422">UART1</text>
+        <text class="c m" x="755.6" y="442">RC9/RA11</text>
+        <rect class="gr" x="873.8" y="386" width="216.2" height="84"/>
+        <text class="c b" x="981.9" y="422">GPIO</text>
+        <text class="c m" x="981.9" y="442">RB6, RB8, RC1</text>
+      </svg></div>
+      <div class="legend"><span>Navy = layer</span><span>White box = software module (files)</span><span>Grey box = hardware peripheral (pins)</span></div>
     </div>
   </div>
 
@@ -633,7 +771,7 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
         <tr><td class="mono">Protocol_WaitForFlashComplete(ms)</td><td>Wait for FLASH_COMPLETE</td><td>PROTO_ERROR</td></tr>
         <tr><td class="mono">Protocol_WaitForExtFlashRequest / Unmount</td><td>External flash flow (not yet called)</td><td>PROTO_ERROR</td></tr>
         <tr><td class="mono">Protocol_CalculateChecksum(data, len)</td><td>16-bit byte sum</td><td>uint16_t</td></tr>
-        <tr><td class="mono">Protocol_ReadByte(&amp;b, ms)</td><td>Polled UART2 read, clears OERR, ~1600 loops/ms</td><td>bool</td></tr>
+        <tr><td class="mono">Protocol_ReadByte(&amp;b, ms)</td><td>Reads the 64-byte UART2 RX queue (filled by the U2RX interrupt), clears OERR, ~1600 loops/ms timeout</td><td>bool</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -648,16 +786,46 @@ footer .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; justify-cont
     <h3><span class="n">5.1</span>Frame format</h3>
     <div>
       <p class="cap">Figure 5-1: <span>Frame layout</span></p>
-      <div class="bytes">
-        <div class="byte sf"><b>0xAA</b><small>START</small></div>
-        <div class="byte"><b>ID</b><small>MSG_ID</small></div>
-        <div class="byte"><b>LEN_H</b><small>length</small></div>
-        <div class="byte"><b>LEN_L</b><small>length</small></div>
-        <div class="byte pl"><b>PAYLOAD[0..LEN-1]</b><small>0&ndash;66 bytes</small></div>
-        <div class="byte"><b>CRC_H</b><small>checksum</small></div>
-        <div class="byte"><b>CRC_L</b><small>checksum</small></div>
-        <div class="byte sf"><b>0x55</b><small>END</small></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 950 212" style="min-width:760px" role="img" aria-label="Protocol frame layout from START 0xAA to END 0x55">
+        <text class="s" x="20" y="34">Byte offset</text>
+        <rect class="bx" x="20" y="60" width="90" height="60" style="fill:#fdecec;stroke:#000;stroke-width:1.4"/>
+        <text class="c s" x="65" y="52">0</text>
+        <text class="c m b" x="65" y="87">0xAA</text>
+        <text class="c s" x="65" y="107">START</text>
+        <rect class="bx" x="110" y="60" width="90" height="60"/>
+        <text class="c s" x="155" y="52">1</text>
+        <text class="c m b" x="155" y="87">MSG_ID</text>
+        <text class="c s" x="155" y="107">Table 5-2</text>
+        <rect class="bx" x="200" y="60" width="90" height="60"/>
+        <text class="c s" x="245" y="52">2</text>
+        <text class="c m b" x="245" y="87">LEN_H</text>
+        <text class="c s" x="245" y="107">length (BE)</text>
+        <rect class="bx" x="290" y="60" width="90" height="60"/>
+        <text class="c s" x="335" y="52">3</text>
+        <text class="c m b" x="335" y="87">LEN_L</text>
+        <text class="c s" x="335" y="107">length (BE)</text>
+        <rect class="gr" x="380" y="60" width="240" height="60"/>
+        <text class="c s" x="500" y="52">4 &hellip; 3+LEN</text>
+        <text class="c m b" x="500" y="87">PAYLOAD[0..LEN&minus;1]</text>
+        <text class="c s" x="500" y="107">0&ndash;66 bytes</text>
+        <rect class="bx" x="620" y="60" width="110" height="60"/>
+        <text class="c s" x="675" y="52">4+LEN</text>
+        <text class="c m b" x="675" y="87">CRC_H</text>
+        <text class="c s" x="675" y="107">checksum (BE)</text>
+        <rect class="bx" x="730" y="60" width="110" height="60"/>
+        <text class="c s" x="785" y="52">5+LEN</text>
+        <text class="c m b" x="785" y="87">CRC_L</text>
+        <text class="c s" x="785" y="107">checksum (BE)</text>
+        <rect class="bx" x="840" y="60" width="90" height="60" style="fill:#fdecec;stroke:#000;stroke-width:1.4"/>
+        <text class="c s" x="885" y="52">6+LEN</text>
+        <text class="c m b" x="885" y="87">0x55</text>
+        <text class="c s" x="885" y="107">END</text>
+        <path class="ln" d="M110,130 V140 H620 V130"/>
+        <text class="c s" x="365" y="158">checksum = sum of bytes 1 &hellip; 3+LEN, modulo 2<tspan baseline-shift="super" style="font-size:8px">16</tspan></text>
+        <path class="ln" d="M20,172 V182 H930 V172"/>
+        <text class="c s" x="475" y="200">frame = 7 + LEN bytes (73 bytes for a full 64-byte DATA_PACKET)</text>
+      </svg></div>
+      <div class="legend"><span>Red = frame delimiters</span><span>Grey = payload</span><span>BE = big-endian</span></div>
     </div>
     <div>
       <p class="cap">Table 5-1: <span>Frame fields</span></p>
@@ -809,12 +977,116 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
 
 <!-- =================================================================== 6 UPDATE FLOW -->
 <section class="page" id="flow" role="tabpanel" aria-label="Update flow" hidden>
-  <div class="intro"><h2>Firmware Update Sequence</h2><p>Message sequence for an internal-flash update in Host mode, with retry handling and transfer timing. The target paces the transfer; the bridge never sends ahead of an ACK.</p></div>
+  <div class="intro"><h2>Firmware Update Sequence</h2><p>Animated walkthrough and message sequence for an internal-flash update in Host and Device mode, with retry handling and transfer timing. The target paces the transfer; the bridge never sends ahead of an ACK.</p></div>
+
+  <div class="fa-wrap" id="fa-upd">
+  <div class="sec">
+    <h3><span class="n">6.1</span>Animated walkthrough</h3>
+    <div class="fa-sc" data-fa="scenarios" role="group" aria-label="Scenario"></div>
+    <div class="fa-row">
+      <button type="button" class="btn" data-fa="play">Pause</button>
+      <button type="button" class="btn fa-ghost" data-fa="restart">Restart scenario</button>
+      <label>Speed <input type="range" data-fa="speed" min="0.25" max="3" step="0.25" value="1" aria-label="Speed"> <output data-fa="speed-o">1&times;</output></label>
+    </div>
+    <div class="note fa-cap"><div aria-live="polite"><strong data-fa="cap-h"></strong><p data-fa="cap-p"></p></div>
+      <p class="fa-now"><b>Now:</b><i class="fa-sw" data-fa="now-sw"></i><span data-fa="now-t">&mdash;</span></p></div>
+    <div>
+      <p class="cap">Figure 6-1: <span>Live update flow (dashed blue = link in use, arrow = direction; bridge and target state names are the real enum values)</span></p>
+      <div class="fig"><svg data-fa="svg" viewBox="0 0 1240 480" style="min-width:900px" role="img" aria-label="Animated firmware update: pendrive or PC, PIC24 bridge, target application and bootloader">
+        <defs></defs>
+        <text class="zh c" x="125" y="30">SOURCE</text>
+        <text class="zh c" x="540" y="30">BRIDGE</text>
+        <text class="zh c" x="1050" y="30">TARGET MCU</text>
+
+        <!-- pendrive (Host mode) -->
+        <rect id="fa-drv-box" class="bx" x="40" y="105" width="170" height="90"/>
+        <text class="c b" x="125" y="132">USB pendrive</text>
+        <text class="c s" x="125" y="180">FAT32 &middot; APP.BIN</text>
+        <text class="c s" x="290" y="118">USB Host &middot; MSD</text>
+        <text class="c s" x="290" y="134">VBUS 5 V from bridge</text>
+
+        <!-- host PC (Device mode) -->
+        <rect id="fa-pc-box" class="bx" x="40" y="305" width="170" height="90"/>
+        <text class="c b" x="125" y="332">Host PC</text>
+        <text class="c s" x="125" y="380">firmware_sender.py</text>
+        <text class="c s" x="290" y="384">USB Device &middot; CDC</text>
+        <text class="c s" x="290" y="400">VBUS from PC</text>
+
+        <!-- bridge -->
+        <rect id="fa-br-box" class="hl" x="440" y="150" width="200" height="200"/>
+        <text class="c b" x="540" y="176">PIC24FJ64GU205</text>
+        <text class="c s" x="540" y="194">USB_Bridge.X</text>
+        <text class="c s" id="fa-br-mode" x="540" y="212">Mode: Host (MSD)</text>
+        <text class="c s" x="540" y="284">state</text>
+        <text class="c m" id="fa-br-st" x="540" y="302" style="font-size:10.5px">APP_STATE_WAIT_FOR_DEVICE</text>
+        <text class="c s" id="fa-br-led" x="540" y="330">LED RC1: off</text>
+
+        <!-- UART2 link labels -->
+        <text class="c s" x="700" y="200">UART2 &middot; 115 200 8N1</text>
+        <text class="c s" x="700" y="304">RB2 TX / RB3 RX</text>
+
+        <!-- target -->
+        <rect class="fr" x="900" y="40" width="300" height="425" style="stroke:#8a8a8a;stroke-dasharray:5 4"/>
+        <text class="c b" x="1050" y="60">dsPIC33AK128MC106</text>
+        <text class="c s" x="1050" y="76">stand-in for Traveo II</text>
+        <rect id="fa-app-box" class="hl" x="935" y="110" width="230" height="110"/>
+        <text class="c b" x="1050" y="132">Application</text>
+        <text class="c s" x="1050" y="148">dspic33_app.X &middot; 0x810000</text>
+        <text class="c m" id="fa-app-st" x="1050" y="200" style="font-size:10.5px">running (LED blink)</text>
+        <text class="c s" x="1050" y="241">boot flag, RAM 0x4000</text>
+        <text class="c m" id="fa-flag" x="1050" y="259">0x00000000</text>
+        <rect id="fa-boot-box" class="bx" x="935" y="290" width="230" height="110"/>
+        <text class="c b" x="1050" y="312">Bootloader</text>
+        <text class="c s" x="1050" y="328">dspic33_target.X &middot; 0x800000</text>
+        <text class="c m" id="fa-boot-st" x="1050" y="380" style="font-size:10.5px">not running</text>
+      </svg></div>
+      <div class="legend" data-fa="legend"></div>
+      <div class="fa-feedbox">
+        <div class="fa-feedhd"><span class="fa-live" data-fa="live">Live</span><span>Commentary &middot; click a line to inspect that frame</span><span class="fa-sp"></span><button type="button" class="fa-jump" data-fa="jump" hidden>Jump to newest &darr;</button><span class="fa-clock" data-fa="clock">00:00.0</span></div>
+        <ol class="fa-feed" data-fa="feed" aria-label="Live commentary, newest at the bottom"></ol>
+      </div>
+    </div>
+    <div class="note warn"><strong>Time is not to scale</strong><p>On the wire one DATA_PACKET + ACK takes 7.2 ms (Table 6-3), so all 105 packets of the 6 672-byte APP.BIN take about 0.76 s of UART time. Waits such as the 1 s target reset delay and the 30 s ACK timeout are shortened. Packets 5&ndash;104 are skipped; their exchange is the same as packets 1&ndash;4. Frame bytes are computed from the real APP.BIN in the workspace root.</p></div>
+  </div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h3><span class="n">6.2</span>Frame inspector</h3>
+      <div class="fa-ins" data-fa="ins"><p class="fa-hint">Click any moving packet, or any frame line in the commentary, to see its bytes here.</p></div>
+    </div>
+    <div class="sec">
+      <h3><span class="n">6.3</span>Transfer progress</h3>
+      <div data-fa="stats">
+        <div class="fa-prog" aria-hidden="true"><i id="fa-bar"></i></div>
+        <div class="tbl"><table>
+          <tbody id="fa-cbody"></tbody>
+        </table></div>
+      </div>
+    </div>
+  </div>
+  </div>
 
   <div class="sec">
-    <h3><span class="n">6.1</span>Sequence diagram, Host mode</h3>
+    <h3><span class="n">6.4</span>What each scenario shows</h3>
     <div>
-      <p class="cap">Figure 6-1: <span>APP.BIN update (UML sequence)</span></p>
+      <p class="cap">Table 6-1: <span>Animation scenarios</span></p>
+      <div class="tbl"><table>
+        <thead><tr><th>Scenario</th><th>What you see</th><th>What the code does</th><th>Bench status</th></tr></thead>
+        <tbody>
+        <tr><td class="k">1 &middot; Host mode update</td><td>Mount, find <code>*.BIN</code>, app reset into bootloader, HEADER, erase, DATA/ACK loop, FLASH_COMPLETE, jump to the new app</td><td><code>APP_Tasks()</code> states <code>FIND_FILE</code> &rarr; <code>DONE</code>; bootloader <code>STATE_IDLE</code> &rarr; <code>STATE_COMPLETE</code></td><td><span class="pill done">Implemented</span></td></tr>
+        <tr><td class="k">2 &middot; Device mode update</td><td>PC sends each frame over CDC; the bridge forwards it on UART2 and relays the replies back</td><td><code>DEV_Tasks()</code>; 73-byte DATA frames arrive as 64 + 9 byte CDC packets and are joined in <code>cdcAccumBuffer</code></td><td><span class="pill done">Implemented</span></td></tr>
+        <tr><td class="k">3 &middot; Corrupted DATA frame</td><td>Target drops packet #37 silently, bridge waits 30 s, resends, transfer continues</td><td>Target <code>ReadFrame()</code> returns false on CRC mismatch (no NACK); bridge ACK timeout &rarr; <code>retryCount</code> 1 &rarr; resend</td><td><span class="pill open">To verify</span></td></tr>
+        <tr><td class="k">4 &middot; Corrupted ACK</td><td>Resent #37 is answered with NACK twice; the bridge gives up after 3 attempts</td><td>Target already expects seq 38 and NACKs a repeated seq 37 (finding F10)</td><td><span class="pill open">To verify</span></td></tr>
+        <tr><td class="k">5 &middot; Target not answering</td><td>Two USB_DETECTED frames get no reply; READY timeout; bridge ERROR</td><td><code>Protocol_WaitForReady(30000)</code> &rarr; <code>PROTO_ERROR_TIMEOUT</code> &rarr; <code>APP_STATE_ERROR</code>, fast LED blink</td><td><span class="pill open">To verify</span></td></tr>
+        </tbody>
+      </table></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h3><span class="n">6.5</span>Sequence diagram, Host mode</h3>
+    <div>
+      <p class="cap">Figure 6-2: <span>APP.BIN update (UML sequence)</span></p>
       <div class="fig"><svg viewBox="0 0 940 712" style="min-width:760px" role="img" aria-label="Host mode update sequence diagram">
         <defs>
           <marker id="m61" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker>
@@ -853,7 +1125,7 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
   </div>
 
   <div class="sec">
-    <h3><span class="n">6.2</span>Step table</h3>
+    <h3><span class="n">6.6</span>Step table</h3>
     <div class="tbl"><table>
       <thead><tr><th>Step</th><th>Bridge</th><th>Message</th><th>Target</th></tr></thead>
       <tbody>
@@ -873,13 +1145,14 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
 
   <div class="grid2">
     <div class="sec">
-      <h3><span class="n">6.3</span>Error handling</h3>
+      <h3><span class="n">6.7</span>Error handling</h3>
       <div>
-        <p class="cap">Table 6-1: <span>Failure responses</span></p>
+        <p class="cap">Table 6-2: <span>Failure responses</span></p>
         <div class="tbl"><table>
           <thead><tr><th>Condition</th><th>Bridge</th><th>Target</th></tr></thead>
           <tbody>
-          <tr><td>ACK timeout / CRC / NACK</td><td>Resend same seq, max 3, then ERROR</td><td>&mdash;</td></tr>
+          <tr><td>ACK timeout / CRC / NACK</td><td>Resend same seq; ERROR after 3 failed attempts</td><td>Bad CRC: frame ignored, no reply</td></tr>
+          <tr><td>ACK lost or corrupted</td><td>Resends seq n &rarr; NACK &rarr; ERROR (F10)</td><td>Already expects n+1, NACKs repeated seq n</td></tr>
           <tr><td>Wrong seq received</td><td>Counted as retry</td><td>Sends NACK, keeps state</td></tr>
           <tr><td>Erase or write fails</td><td>Gets NACK &rarr; retry &rarr; ERROR</td><td>NACK, enters ERROR</td></tr>
           <tr><td>No READY / REQUEST</td><td>ERROR after 30 s</td><td>&mdash;</td></tr>
@@ -890,9 +1163,9 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
       </div>
     </div>
     <div class="sec">
-      <h3><span class="n">6.4</span>Transfer timing</h3>
+      <h3><span class="n">6.8</span>Transfer timing</h3>
       <div>
-        <p class="cap">Table 6-2: <span>UART time per 64-byte block</span></p>
+        <p class="cap">Table 6-3: <span>UART time per 64-byte block</span></p>
         <div class="tbl"><table>
           <thead><tr><th>Item</th><th>Value</th></tr></thead>
           <tbody>
@@ -904,7 +1177,7 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
           </tbody>
         </table></div>
       </div>
-      <p style="font-size:.86rem;color:var(--ink-2)">Excludes flash write time, page erase, and the debug prints on UART1 (about 90 characters per packet), which add roughly 8 ms per block.</p>
+      <p style="font-size:.86rem;color:var(--ink-2)">Excludes flash write time, page erase, and the debug prints on UART1 (about 90 characters per packet, 7.8 ms on the wire). UART1 TX now has a 64-byte interrupt-driven queue, so only the part above 64 characters blocks the main loop (about 2.3 ms per packet, to be measured).</p>
     </div>
   </div>
 </section>
@@ -1021,10 +1294,10 @@ for (i = 0; i &lt; LEN; i++) crc += PAYLOAD[i];   /* uint16_t, wraps at 0xFFFF *
   <div class="sec">
     <h3><span class="n">8.1</span>Start the GUI</h3>
     <pre><code>pip install pyserial                 # one time
-python tools/firmware_sender_gui.py  # run from the Marelli workspace folder</code></pre>
+python tools/firmware_sender_gui.py  # run from the workspace root folder</code></pre>
     <ol>
       <li>Connect the bridge to the PC with no pendrive. RB6 sees VBUS and the bridge starts in Device mode.</li>
-      <li>In the <b>Marelli Firmware Sender</b> window, select the COM port (Device Manager &rarr; Ports) and keep 115 200 baud.</li>
+      <li>In the <b>Firmware Sender</b> window, select the COM port (Device Manager &rarr; Ports) and keep 115 200 baud.</li>
       <li>Select the <code>.BIN</code> file and start the transfer. The log shows each step and the progress.</li>
     </ol>
   </div>
@@ -1125,24 +1398,45 @@ make -f nbproject/Makefile-default.mk program   # program the board</code></pre>
     <h3><span class="n">9.3</span>Image preparation</h3>
     <div>
       <p class="cap">Figure 9-1: <span>Update image (APP.BIN)</span></p>
-      <div class="flow">
-        <div class="node"><b>dspic33_app.X</b><small>build, linked at 0x810000</small></div>
-        <div class="link">.hex</div>
-        <div class="node"><b>hex2bin_dspic.py</b><small>extract 0x810000&ndash;0x81FFFF</small></div>
-        <div class="link">APP.BIN</div>
-        <div class="node hl"><b>Pendrive or PC tool</b><small>Host mode / Device mode</small></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 960 120" style="min-width:700px" role="img" aria-label="Update image preparation: build, hex2bin_dspic.py, APP.BIN">
+        <defs><marker id="m91" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <rect class="bx" x="20" y="20" width="200" height="80"/>
+        <text class="c b" x="120" y="46">dspic33_app.X</text>
+        <text class="c s" x="120" y="64">MPLAB X build</text>
+        <text class="c s" x="120" y="82">linked at 0x810000</text>
+        <line class="ln" x1="220" y1="60" x2="380" y2="60" marker-end="url(#m91)"/><text class="c s" x="300" y="52">.hex</text><text class="c s" x="300" y="78">production image</text>
+        <rect class="bx" x="380" y="20" width="200" height="80"/>
+        <text class="c b" x="480" y="46">hex2bin_dspic.py</text>
+        <text class="c s" x="480" y="64">extract 0x810000&ndash;0x81FFFF</text>
+        <text class="c s" x="480" y="82">(fallback 0x800000)</text>
+        <line class="ln" x1="580" y1="60" x2="740" y2="60" marker-end="url(#m91)"/><text class="c s" x="660" y="52">APP.BIN</text><text class="c s" x="660" y="78">raw binary</text>
+        <rect class="hl" x="740" y="20" width="200" height="80"/>
+        <text class="c b" x="840" y="46">Pendrive or PC tool</text>
+        <text class="c s" x="840" y="64">Host mode: copy to stick</text>
+        <text class="c s" x="840" y="82">Device mode: PC sender</text>
+      </svg></div>
     </div>
     <pre><code>python tools/hex2bin_dspic.py dspic33_app.X/dist/default/production/dspic33_app.X.production.hex APP.BIN</code></pre>
     <div>
       <p class="cap">Figure 9-2: <span>First-time programming image</span></p>
-      <div class="flow">
-        <div class="node"><b>Bootloader HEX</b><small>dspic33_target.X</small></div>
-        <div class="link">+ app HEX</div>
-        <div class="node"><b>merge_hex.py</b><small>combine both regions</small></div>
-        <div class="link">combined.hex</div>
-        <div class="node hl"><b>ICSP</b><small>PKOB4, MPLAB IPE / X</small></div>
-      </div>
+      <div class="fig"><svg viewBox="0 0 960 230" style="min-width:700px" role="img" aria-label="First-time programming: merge bootloader and application HEX, program over ICSP">
+        <defs><marker id="m92" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#000"/></marker></defs>
+        <rect class="bx" x="20" y="20" width="200" height="70"/>
+        <text class="c b" x="120" y="50">Bootloader HEX</text>
+        <text class="c s" x="120" y="68">dspic33_target.X &middot; 0x800000</text>
+        <rect class="bx" x="20" y="140" width="200" height="70"/>
+        <text class="c b" x="120" y="170">Application HEX</text>
+        <text class="c s" x="120" y="188">dspic33_app.X &middot; 0x810000</text>
+        <path class="ln" d="M220,55 H300 V105 H380" marker-end="url(#m92)"/><text class="c s" x="260" y="47">boot .hex</text>
+        <path class="ln" d="M220,175 H300 V125 H380" marker-end="url(#m92)"/><text class="c s" x="260" y="193">app .hex</text>
+        <rect class="bx" x="380" y="80" width="200" height="70"/>
+        <text class="c b" x="480" y="110">merge_hex.py</text>
+        <text class="c s" x="480" y="128">combine both regions</text>
+        <line class="ln" x1="580" y1="115" x2="740" y2="115" marker-end="url(#m92)"/><text class="c s" x="660" y="107">combined.hex</text><text class="c s" x="660" y="133">one HEX file</text>
+        <rect class="hl" x="740" y="80" width="200" height="70"/>
+        <text class="c b" x="840" y="110">ICSP programming</text>
+        <text class="c s" x="840" y="128">PKOB4 &middot; MPLAB IPE / X</text>
+      </svg></div>
     </div>
     <pre><code>python tools/merge_hex.py dspic33_target.X.production.hex dspic33_app.X.production.hex combined.hex</code></pre>
   </div>
@@ -1160,6 +1454,7 @@ make -f nbproject/Makefile-default.mk program   # program the board</code></pre>
       </tbody>
     </table></div>
     <div class="note"><strong>ICSP is mandatory for</strong><p>Blank devices, recovery after a failed update, and production programming.</p></div>
+    <div class="note warn"><strong>Code protection is enabled in the working copy</strong><p>The uncommitted MCC <code>system.c</code> sets <code>GWRP = ON</code>, <code>GSS = HIGH</code>, <code>CWRP = ON</code> and <code>CSS = HIGH</code>. Flash cannot be read back, and reprogramming needs a full chip erase. Keep these OFF while debugging (finding F12).</p></div>
   </div>
 </section>
 
@@ -1200,8 +1495,11 @@ make -f nbproject/Makefile-default.mk program   # program the board</code></pre>
         <tr><td class="mono">F5</td><td><span class="pill md">Medium</span></td><td>Linker</td><td>Bootloader <code>program</code> region is not limited to below 0x810000.</td><td>Limit region length to 0xFFFC; check map file.</td></tr>
         <tr><td class="mono">F6</td><td><span class="pill lo">Low</span></td><td>FILEIO</td><td><code>FILEIO_DriveUnmount</code> skipped in UNMOUNT_DISK ("causes crash").</td><td>Debug the unmount crash before release.</td></tr>
         <tr><td class="mono">F7</td><td><span class="pill lo">Low</span></td><td>Timing</td><td><code>PROTOCOL_TIMEOUT_MS</code> = 30 s is a test value; 5 s start-up delay in <code>main()</code>.</td><td>Set from Traveo II erase time; remove delay.</td></tr>
-        <tr><td class="mono">F8</td><td><span class="pill lo">Low</span></td><td>Speed</td><td>About 90 debug characters per packet on UART1 roughly double transfer time.</td><td>Compile out debug prints for production.</td></tr>
+        <tr><td class="mono">F8</td><td><span class="pill lo">Low</span></td><td>Speed</td><td>About 90 debug characters per packet on UART1. With the new 64-byte TX queue only the overflow blocks (about 2.3 ms per packet instead of 7.8 ms).</td><td>Measure; compile out debug prints for production.</td></tr>
         <tr><td class="mono">F9</td><td><span class="pill lo">Low</span></td><td>LED</td><td><code>LED_Init()</code> is never called; MCC sets RC1 as input, so status blinks are not visible.</td><td>Call <code>LED_Init()</code> in <code>main()</code> or configure RC1 as output in MCC.</td></tr>
+        <tr><td class="mono">F10</td><td><span class="pill hi">High</span></td><td>Protocol</td><td>A lost or corrupted ACK aborts the update: the bridge resends seq n, the target already expects n+1 and answers NACK; after 3 attempts the bridge goes to ERROR (Update Flow scenario 4).</td><td>Target: if seq = expectedSeq &minus; 1, send the ACK again without writing.</td></tr>
+        <tr><td class="mono">F11</td><td><span class="pill md">Medium</span></td><td>PC tool</td><td><code>firmware_sender.py</code> and the GUI wait 5 s per ACK; the bridge waits 30 s before it resends. In Device mode the PC gives up before the bridge retry.</td><td>PC ACK timeout &gt; bridge timeout &times; retries, or shorten the bridge timeout.</td></tr>
+        <tr><td class="mono">F12</td><td><span class="pill md">Medium</span></td><td>Config</td><td>Uncommitted <code>system.c</code> sets <code>GWRP = ON</code>, <code>GSS = HIGH</code>, <code>CWRP = ON</code>, <code>CSS = HIGH</code> (code protection).</td><td>Confirm it is intended; keep OFF for development and debugging.</td></tr>
         </tbody>
       </table></div>
     </div>
@@ -1223,7 +1521,7 @@ make -f nbproject/Makefile-default.mk program   # program the board</code></pre>
 
 </div></main>
 
-<footer><div class="wrap"><span>Marelli USB Bridge &middot; Microchip Technology Inc.</span></div></footer>
+<footer><div class="wrap"><span>USB Flashing Bridge &middot; Microchip Technology Inc.</span></div></footer>
 
 <script>
 (function () {
@@ -1314,5 +1612,817 @@ make -f nbproject/Makefile-default.mk program   # program the board</code></pre>
     try { navigator.clipboard.writeText(lastFrame).then(done, selectOut); } catch (err) { selectOut(); }
   });
   render();
+})();
+</script>
+
+<script>
+/*! FlowAnim 1.0 - animated packet / data-flow tab for tabbed-guide pages.
+    Plain JavaScript, no libraries, no network. Paste this file verbatim into a <script>
+    in the page, then call FlowAnim.mount(config) from a second <script>.
+    Config format: see README.md next to this file. */
+(function (global) {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var BASE = { ok: '#2f7d1e', bad: '#e31b23', info: '#1c3460', grey: '#6b6b6b' };
+
+  function mk(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var a in attrs) if (attrs[a] != null) e.setAttribute(a, attrs[a]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function rm(e) { if (e && e.parentNode) e.parentNode.removeChild(e); }
+
+  /* sample a line or cubic curve once, so positions need no DOM geometry calls */
+  function sample(pts, cubic) {
+    var s = [], n = cubic ? 48 : 1, i;
+    for (i = 0; i <= n; i++) {
+      var t = i / n, u = 1 - t;
+      s.push(cubic
+        ? [u*u*u*pts[0][0] + 3*u*u*t*pts[1][0] + 3*u*t*t*pts[2][0] + t*t*t*pts[3][0],
+           u*u*u*pts[0][1] + 3*u*u*t*pts[1][1] + 3*u*t*t*pts[2][1] + t*t*t*pts[3][1]]
+        : [pts[0][0] + (pts[1][0] - pts[0][0]) * t, pts[0][1] + (pts[1][1] - pts[0][1]) * t]);
+    }
+    var cum = [0];
+    for (i = 1; i < s.length; i++) cum.push(cum[i - 1] + Math.hypot(s[i][0] - s[i - 1][0], s[i][1] - s[i - 1][1]));
+    return { s: s, cum: cum, len: cum[cum.length - 1] };
+  }
+
+  function mount(cfg) {
+    var root = typeof cfg.root === 'string' ? document.getElementById(cfg.root) : cfg.root;
+    if (!root) return null;
+    var section = (cfg.section && document.getElementById(cfg.section)) || root.closest('section') || root;
+    function q(n) { return root.querySelector('[data-fa="' + n + '"]'); }
+    function setText(n, v) { var e = q(n); if (e) e.textContent = v; }
+
+    var svg = q('svg'), feed = q('feed'), jump = q('jump');
+    var SPD = cfg.speed || 320, GAP = cfg.gap != null ? cfg.gap : 0.25, MAXLINES = cfg.maxLines || 220;
+    var kinds = cfg.kinds || {}, nodes = cfg.nodes || {};
+    function color(k) { return BASE[k] || (kinds[k] && kinds[k].color) || k || BASE.grey; }
+
+    /* ---- layers: links under the artwork, packets + bubbles on top ---- */
+    var defs = svg.querySelector('defs');
+    var linkLayer = mk('g', { class: 'fa-links' });
+    svg.insertBefore(linkLayer, defs ? defs.nextSibling : svg.firstChild);
+    var layer = mk('g', { class: 'fa-pk' }, svg);
+
+    /* ---- nodes and links ---- */
+    var seg = {}, linkOf = {};
+    Object.keys(nodes).forEach(function (k) {
+      var n = nodes[k];
+      n.key = k; n.name0 = n.name || k; n.name = n.name0;
+      if (!n.bubble) n.bubble = [n.x, n.y - 62];
+    });
+    (cfg.links || []).forEach(function (L) {
+      var a = nodes[L[0]], b = nodes[L[1]], opt = L[2] || {};
+      if (!a || !b) throw new Error('FlowAnim: link ' + L[0] + '-' + L[1] + ' uses an unknown node');
+      var p0 = [a.x, a.y], p3 = [b.x, b.y], c = opt.c;
+      var s = sample(c ? [p0, c[0], c[1], p3] : [p0, p3], !!c);
+      s.el = mk('path', { class: 'lk', d: c ? 'M' + p0 + ' C' + c[0] + ' ' + c[1] + ' ' + p3 : 'M' + p0 + ' L' + p3 }, linkLayer);
+      s.a = L[0]; s.b = L[1]; s.state = 'lk';
+      seg[L[0] + '|' + L[1]] = s;
+      linkOf[L[0] + '>' + L[1]] = { s: s, rev: false };
+      linkOf[L[1] + '>' + L[0]] = { s: s, rev: true };
+    });
+    function route(path) {
+      var r = [];
+      for (var i = 0; i < path.length - 1; i++) {
+        var l = linkOf[path[i] + '>' + path[i + 1]];
+        if (!l) throw new Error('FlowAnim: no link between ' + path[i] + ' and ' + path[i + 1]);
+        r.push(l);
+      }
+      return r;
+    }
+    function at(l, d) {
+      var g = l.s, dd = l.rev ? g.len - d : d, i = 1;
+      while (i < g.cum.length - 1 && g.cum[i] < dd) i++;
+      var a = g.s[i - 1], b = g.s[i], span = g.cum[i] - g.cum[i - 1] || 1, f = (dd - g.cum[i - 1]) / span;
+      return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f,
+               a: Math.atan2(b[1] - a[1], b[0] - a[0]) + (l.rev ? Math.PI : 0) };
+    }
+
+    /* ---- state ---- */
+    var pkts = [], marks = [], queue = [], now = 0, t0 = 0, playing = true, speed = 1, cur = 0, runId = 0;
+    var selected = null, selLi = null, lastClock = '', snaps = [];
+    function later(dt, fn) { queue.push({ t: now + dt, fn: fn }); }
+
+    /* ---- reversible changes made by scenario steps ---- */
+    function snap(e, what) {
+      e._fa = e._fa || {};
+      if (what in e._fa) return;
+      var v = what === 'text' ? e.textContent : what === 'display' ? e.style.display : e.getAttribute(what.slice(5));
+      e._fa[what] = v;
+      snaps.push({ e: e, w: what, v: v });
+    }
+    function restore() {
+      snaps.forEach(function (s) {
+        if (s.w === 'text') s.e.textContent = s.v;
+        else if (s.w === 'display') s.e.style.display = s.v;
+        else if (s.v == null) s.e.removeAttribute(s.w.slice(5));
+        else s.e.setAttribute(s.w.slice(5), s.v);
+        delete s.e._fa;
+      });
+      snaps = [];
+      Object.keys(nodes).forEach(function (k) { nodes[k].name = nodes[k].name0; });
+      Object.keys(seg).forEach(function (key) {
+        var s = seg[key];
+        s.el.style.display = (nodes[s.a].hidden || nodes[s.b].hidden) ? 'none' : '';
+      });
+    }
+    function vis(k, on) {
+      var n = nodes[k], e = document.getElementById(n ? n.el : k);
+      if (e) { snap(e, 'display'); e.style.display = on ? '' : 'none'; }
+      if (n) Object.keys(seg).forEach(function (key) {
+        var s = seg[key];
+        if (s.a === k || s.b === k) s.el.style.display = on ? '' : 'none';
+      });
+    }
+
+    /* ---- marks (big X) and comment bubbles (one per node) ---- */
+    function mark(x, y, txt, col, ttl, size) {
+      var t = mk('text', { x: x, y: y, 'text-anchor': 'middle',
+        style: 'fill:' + col + ';font-weight:700;font-size:' + (size || 12) + 'px;paint-order:stroke;stroke:#fff;stroke-width:4px;stroke-linejoin:round;pointer-events:none' }, layer);
+      t.textContent = txt;
+      marks.push({ el: t, t: ttl, ttl: ttl });
+    }
+    function bubble(k, txt, col, ttl) {
+      marks = marks.filter(function (m) { if (m.key !== k) return true; rm(m.el); return false; });
+      var n = nodes[k], pos = n ? n.bubble : [700, 40], x = pos[0], y = pos[1];
+      var w = Math.round(txt.length * 6.9 + 18), bx = pos[2] === 'end' ? x - w : pos[2] === 'start' ? x : x - w / 2;
+      var g = mk('g', { style: 'pointer-events:none' }, layer);
+      mk('rect', { x: bx, y: y - 14, width: w, height: 21, rx: 10, fill: '#fff', stroke: col, 'stroke-width': 1.6 }, g);
+      var t = mk('text', { x: bx + w / 2, y: y + 1, 'text-anchor': 'middle', style: 'fill:' + col + ';font-weight:700;font-size:12px' }, g);
+      t.textContent = txt;
+      ttl = ttl || 3.2;
+      marks.push({ el: g, t: ttl, ttl: ttl, key: k });
+    }
+
+    /* ---- live commentary feed ---- */
+    function clock(t) {
+      t = Math.max(0, t);
+      var m = Math.floor(t / 60), s = t - m * 60;
+      return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s.toFixed(1);
+    }
+    function atBottom() { return feed.scrollHeight - feed.scrollTop - feed.clientHeight < 40; }
+    function setNow(txt, col) {
+      setText('now-t', txt);
+      var sw = q('now-sw'); if (sw) sw.style.background = col || BASE.grey;
+    }
+    function line(o) {
+      if (!feed) return null;
+      var stick = atBottom();
+      var li = el('li', (o.cls ? o.cls + ' ' : '') + 'new');
+      var b = el(o.f ? 'button' : 'div', 'fa-lb');
+      if (o.f) b.type = 'button';
+      var ic = el('span', 'fa-i', o.icon || '●'); ic.style.color = o.col || BASE.grey;
+      var x = el('span', 'fa-x');
+      x.appendChild(el('b', null, o.main));
+      if (o.rest) x.appendChild(document.createTextNode(o.rest));
+      if (o.small) x.appendChild(el('small', null, o.small));
+      b.appendChild(el('span', 'fa-t', clock(now - t0))); b.appendChild(ic); b.appendChild(x);
+      li.appendChild(b);
+      if (o.f) { li.f = o.f; li.pkt = o.pkt || null; b.addEventListener('click', function () { pickLine(li); }); }
+      feed.appendChild(li);
+      while (feed.children.length > MAXLINES) {
+        if (feed.firstChild === selLi) selLi = null;
+        feed.removeChild(feed.firstChild);
+      }
+      if (stick) feed.scrollTop = feed.scrollHeight; else if (jump) jump.hidden = false;
+      if (o.now !== false) setNow(o.nowText || (o.main + ' ' + (o.rest || '')), o.col);
+      return li;
+    }
+    if (feed) feed.addEventListener('scroll', function () { if (atBottom() && jump) jump.hidden = true; });
+    if (jump) jump.addEventListener('click', function () { feed.scrollTop = feed.scrollHeight; jump.hidden = true; });
+    function clearFeed() { if (feed) feed.textContent = ''; selLi = null; if (jump) jump.hidden = true; setNow('—', BASE.grey); }
+
+    function detail(f) {
+      if (f.detail) return f.detail;
+      return (f.cells || []).map(function (c) { return c[1].split(' (')[0] + ' ' + c[0]; }).join(' · ');
+    }
+    function logFrame(p) {
+      var f = p.f;
+      p.li = line({ f: f, pkt: p, col: color(p.kind), main: p.lbl, rest: p.from + ' → ' + p.to,
+        small: f.title + ' · ' + detail(f),
+        nowText: p.lbl + ' on its way ' + p.from + ' → ' + p.to + (f.now ? ' · ' + f.now : '') });
+    }
+    function say(k, text, kind) {
+      var n = nodes[k], who = n ? n.name : k;
+      kind = kind || 'info';
+      var col = color(kind), sym = kind === 'ok' ? '✓' : kind === 'bad' ? '✗' : '▸';
+      bubble(k, (sym === '▸' ? '' : sym + ' ') + text, col);
+      line({ icon: sym, col: col, main: who, rest: text, nowText: who + ': ' + text });
+    }
+    function cap(h, p) {
+      setText('cap-h', h); setText('cap-p', p || '');
+      line({ cls: 'phase', icon: '▸', col: BASE.info, main: h, now: false });
+    }
+
+    /* ---- packets ---- */
+    function look(p, lbl, kind, f) {
+      p.lbl = lbl; p.kind = kind; if (f) p.f = f;
+      var col = color(kind), w = Math.max(36, lbl.length * 7 + 14);
+      p.w = w;
+      p.rect.setAttribute('x', -w / 2); p.rect.setAttribute('width', w); p.rect.setAttribute('fill', col);
+      p.arr.setAttribute('fill', col);
+      p.t.textContent = lbl;
+    }
+    function send(o, onEnd) {
+      var segs = route(o.path);
+      var g = mk('g', { class: 'pkt' }, layer);
+      var p = { g: g, segs: segs, i: 0, d: 0, o: o, onEnd: onEnd };
+      p.rect = mk('rect', { y: -10, height: 20, rx: 3, stroke: '#fff', 'stroke-width': 1.5 }, g);
+      p.arr = mk('path', { d: 'M0,-5 L8,0 L0,5 Z' }, g);
+      p.t = mk('text', { class: 'fa-pk-t', x: 0, y: 4, 'text-anchor': 'middle' }, g);
+      look(p, o.lbl, o.kind, o.f);
+      g.addEventListener('pointerdown', function (e) { e.preventDefault(); select(p); });
+      p.from = nodes[o.path[0]].name; p.to = nodes[o.path[o.path.length - 1]].name;
+      pkts.push(p);
+      place(p);
+      if (!o.quiet && p.f) logFrame(p);
+      return p;
+    }
+    function place(p) {
+      var l = p.segs[p.i], pt = at(l, Math.min(p.d, l.s.len));
+      p.x = pt.x; p.y = pt.y;
+      p.g.setAttribute('transform', 'translate(' + pt.x.toFixed(1) + ',' + pt.y.toFixed(1) + ')');
+      var ax = Math.cos(pt.a) * (p.w / 2 + 3), ay = Math.sin(pt.a) * 13;
+      p.arr.setAttribute('transform', 'translate(' + ax.toFixed(1) + ',' + ay.toFixed(1) + ') rotate(' + (pt.a * 180 / Math.PI).toFixed(0) + ')');
+    }
+    function kill(p) {
+      var i = pkts.indexOf(p);
+      if (i >= 0) pkts.splice(i, 1);
+      rm(p.g);
+    }
+    function endSeg(p) {
+      var path = p.o.path, k = path[p.i + 1];
+      if (p.i === p.segs.length - 1) { finish(p, k); return false; }
+      passNode(p, k, path[p.i], path[p.i + 2]);
+      p.i++;
+      return true;
+    }
+    function passNode(p, k, from, to) {
+      var m = p.o.at && p.o.at[k], n = nodes[k];
+      if (m) {
+        look(p, m.lbl || p.lbl, m.kind || p.kind, m.f);
+        if (m.say) say(k, m.say[0], m.say[1]);
+        if (selected === p) showFrame(p.f);
+      }
+      var st = cfg.stats && cfg.stats.onPass ? cfg.stats.onPass(p, k, from, to, api) : null;
+      if (cfg.stats && cfg.stats.onPass) renderStats();
+      var hop = n.hop ? n.hop(p, from, to, api) : null;
+      if (p.o.note && p.o.note[k]) hop = { text: p.o.note[k] };
+      if (hop) {
+        bubble(k, '✓ ' + (hop.bubble || hop.text), color('ok'));
+        line({ f: p.f, pkt: p, icon: '✓', col: color('ok'), main: n.name, rest: hop.text,
+          small: st ? 'counter: ' + st : hop.small, nowText: hop.now || (n.name + ': ' + hop.text) });
+      }
+    }
+    function finish(p, k) {
+      kill(p);
+      var n = nodes[k];
+      if (p.o.drop) {
+        var why = p.o.drop.why || 'dropped';
+        mark(p.x, p.y + 5, '✗', color('bad'), 2.2, 26);
+        bubble(k, '✗ ' + why, color('bad'), 3.4);
+        line({ f: p.f, cls: 'drop', icon: '✗', col: color('bad'), main: n.name, rest: 'dropped ' + p.lbl,
+          small: why, nowText: n.name + ' drops ' + p.lbl + ': ' + why });
+        if (cfg.stats && cfg.stats.onDrop) { cfg.stats.onDrop(p, k, api); renderStats(); }
+      } else if (p.o.arrive) {
+        say(k, p.o.arrive[0], p.o.arrive[1]);
+      }
+      if (p.onEnd) p.onEnd(p);
+    }
+
+    /* ---- step runner ---- */
+    function launch(list, cb, rid) {
+      var left = list.length;
+      if (!left) { cb(); return; }
+      list.forEach(function (o) {
+        later(o.delay || 0, function () {
+          if (rid !== runId) return;
+          send(o, function () { if (--left === 0) later(GAP, cb); });
+        });
+      });
+    }
+    function stream(o, cb, rid) {
+      var i = 0, inflight = 0, finished = false;
+      function maybe() { if (finished && inflight === 0) later(GAP, cb); }
+      (function tick() {
+        if (rid !== runId) return;
+        if (i >= o.count) { finished = true; maybe(); return; }
+        var made = o.make(i++, api);
+        made = made ? (Array.isArray(made) ? made : [made]) : [];
+        made.forEach(function (spec) {
+          inflight++;
+          later(spec.delay || 0, function () {
+            if (rid === runId) send(spec, function () { inflight--; maybe(); });
+          });
+        });
+        var e = o.every || 0.3;
+        later(Array.isArray(e) ? e[0] + Math.random() * (e[1] - e[0]) : e, tick);
+      })();
+    }
+    function runSteps(steps, i, done, rid) {
+      if (rid !== runId) return;
+      if (i >= steps.length) { done(); return; }
+      var st = steps[i];
+      if (typeof st === 'function') st = st(api) || {};
+      var next = function () { runSteps(steps, i + 1, done, rid); };
+      if (st.cap) cap(st.cap[0], st.cap[1]);
+      if (st.rename) Object.keys(st.rename).forEach(function (k) { nodes[k].name = st.rename[k]; });
+      if (st.set) Object.keys(st.set).forEach(function (id) {
+        var e = document.getElementById(id); if (!e) return;
+        snap(e, 'text'); e.textContent = st.set[id];
+      });
+      if (st.attr) Object.keys(st.attr).forEach(function (id) {
+        var e = document.getElementById(id); if (!e) return;
+        Object.keys(st.attr[id]).forEach(function (a) { snap(e, 'attr:' + a); e.setAttribute(a, st.attr[id][a]); });
+      });
+      if (st.show) st.show.forEach(function (k) { vis(k, true); });
+      if (st.hide) st.hide.forEach(function (k) { vis(k, false); });
+      if (st.say) (Array.isArray(st.say[0]) ? st.say : [st.say]).forEach(function (s) { say(s[0], s[1], s[2]); });
+      if (st.run) st.run(api);
+      if (st.send) { launch(Array.isArray(st.send) ? st.send : [st.send], next, rid); return; }
+      if (st.stream) { stream(st.stream, next, rid); return; }
+      if (st.wait) { later(st.wait, next); return; }
+      next();
+    }
+
+    var scBox = q('scenarios'), scBtns = [];
+    function run(i, fresh) {
+      runId++; cur = i;
+      pkts.slice().forEach(kill);
+      marks.forEach(function (m) { rm(m.el); });
+      marks = []; queue = [];
+      restore();
+      t0 = now;
+      if (fresh) {
+        if (cfg.stats && cfg.stats.reset) { cfg.stats.reset(api); renderStats(); }
+        deselect(); clearFeed();
+      } else {
+        line({ cls: 'replay', icon: '↻', col: BASE.grey, main: 'Replaying', rest: cfg.replayText || 'same scenario again', now: false });
+      }
+      scBtns.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i ? 'true' : 'false'); });
+      var rid = runId;
+      runSteps(cfg.scenarios[i].steps, 0, function () {
+        later(cfg.replayAfter || 2.6, function () { if (rid === runId) run(cur, false); });
+      }, rid);
+    }
+
+    /* ---- main update ---- */
+    function update(dt) {
+      now += dt;
+      var cs = clock(now - t0);
+      if (cs !== lastClock) { lastClock = cs; setText('clock', cs); }
+      var due = queue.filter(function (x) { return x.t <= now; });
+      queue = queue.filter(function (x) { return x.t > now; });
+      due.forEach(function (x) { x.fn(); });
+      pkts.slice().forEach(function (p) {
+        if (pkts.indexOf(p) < 0) return;
+        p.d += SPD * dt;
+        while (p.d >= p.segs[p.i].s.len) {
+          p.d -= p.segs[p.i].s.len;
+          if (!endSeg(p)) return;
+        }
+        place(p);
+      });
+      marks = marks.filter(function (m) {
+        m.t -= dt;
+        if (m.t <= 0) { rm(m.el); return false; }
+        m.el.setAttribute('opacity', Math.min(1, m.t / 0.5).toFixed(2));
+        return true;
+      });
+      var act = {};
+      pkts.forEach(function (p) { var l = p.segs[p.i]; act[l.s.a + '|' + l.s.b] = l.rev ? 'lk on rev' : 'lk on'; });
+      Object.keys(seg).forEach(function (key) {
+        var st = act[key] || 'lk';
+        if (seg[key].state !== st) { seg[key].el.setAttribute('class', st); seg[key].state = st; }
+      });
+    }
+
+    /* ---- inspector ---- */
+    function deselect() {
+      if (selected) selected.g.classList.remove('sel');
+      selected = null;
+      if (selLi) selLi.classList.remove('sel');
+      selLi = null;
+    }
+    function select(p) {
+      deselect(); selected = p; p.g.classList.add('sel');
+      if (p.li && p.li.parentNode) { selLi = p.li; selLi.classList.add('sel'); }
+      showFrame(p.f);
+    }
+    function pickLine(li) {
+      deselect();
+      if (li.pkt && pkts.indexOf(li.pkt) >= 0) { selected = li.pkt; selected.g.classList.add('sel'); }
+      selLi = li; li.classList.add('sel');
+      showFrame(li.f);
+    }
+    function showFrame(f) {
+      var box = q('ins');
+      if (!box || !f) return;
+      box.textContent = '';
+      var h = el('p', 'cap', (cfg.inspectorLabel || 'Packet') + ': ');
+      h.appendChild(el('span', null, f.title)); box.appendChild(h);
+      var bytes = el('div', 'bytes');
+      (f.cells || []).forEach(function (c) {
+        var d = el('div', 'byte' + (c[2] ? ' ' + c[2] : ''));
+        d.appendChild(el('b', null, c[0])); d.appendChild(el('small', null, c[1]));
+        bytes.appendChild(d);
+      });
+      box.appendChild(bytes);
+      var tw = el('div', 'tbl'), tbl = el('table'), tb = el('tbody');
+      [['What happens', f.act || '—'], ['Size', f.size ? f.size + ' bytes' + (cfg.sizeNote || '') : '—']].forEach(function (r) {
+        var tr = el('tr'); tr.appendChild(el('td', 'k', r[0])); tr.appendChild(el('td', null, r[1])); tb.appendChild(tr);
+      });
+      tbl.appendChild(tb); tw.appendChild(tbl); box.appendChild(tw);
+    }
+    function renderStats() { if (cfg.stats && cfg.stats.render) cfg.stats.render(api); }
+
+    /* ---- controls, legend, scenario buttons ---- */
+    if (scBox) cfg.scenarios.forEach(function (sc, i) {
+      var b = el('button', null, (i + 1) + ' · ' + sc.name);
+      b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () { run(i, true); kick(); });
+      scBox.appendChild(b); scBtns.push(b);
+    });
+    var lg = q('legend');
+    if (lg) {
+      Object.keys(kinds).forEach(function (k) {
+        if (!kinds[k].label) return;
+        var s = el('span'), i = el('i', 'fa-sw'); i.style.background = kinds[k].color;
+        s.appendChild(i); s.appendChild(document.createTextNode(kinds[k].label)); lg.appendChild(s);
+      });
+      var s2 = el('span'), i2 = el('i', 'fa-sw'); i2.style.background = BASE.bad;
+      s2.appendChild(i2); s2.appendChild(document.createTextNode('✗ dropped')); lg.appendChild(s2);
+    }
+    var playBtn = q('play'), spd = q('speed');
+    function setPlaying(on) {
+      playing = on;
+      if (playBtn) playBtn.textContent = on ? 'Pause' : 'Play';
+      svg.classList.toggle('fa-paused', !on);
+      var lv = q('live');
+      if (lv) { lv.classList.toggle('off', !on); lv.textContent = on ? 'Live' : 'Paused'; }
+    }
+    if (playBtn) playBtn.addEventListener('click', function () { setPlaying(!playing); });
+    if (q('restart')) q('restart').addEventListener('click', function () { run(cur, true); kick(); });
+    if (spd) spd.addEventListener('input', function () { speed = +spd.value; setText('speed-o', speed + '×'); });
+
+    /* ---- loop: runs only while the tab and the window are visible ---- */
+    var raf = null, last = null;
+    function frame(ts) {
+      raf = null;
+      if (section.hidden || document.hidden) { last = null; return; }
+      var dt = last === null ? 0 : Math.min(0.05, (ts - last) / 1000);
+      last = ts;
+      update(playing ? dt * speed : 0);
+      raf = requestAnimationFrame(frame);
+    }
+    function kick() { if (!raf && !section.hidden && !document.hidden) { last = null; raf = requestAnimationFrame(frame); } }
+    new MutationObserver(kick).observe(section, { attributes: true, attributeFilter: ['hidden'] });
+    document.addEventListener('visibilitychange', kick);
+
+    var api = {
+      nodes: nodes, data: {}, color: color,
+      say: say, line: line, cap: cap,
+      send: function (o) { return send(o, null); },
+      el: q('stats')
+    };
+    try { if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) setPlaying(false); } catch (e) {}
+    run(0, true);
+    kick();
+    return api;
+  }
+
+  global.FlowAnim = { mount: mount, version: '1.0' };
+})(window);
+
+</script>
+
+<script>
+/* FlowAnim config - USB Flashing Bridge, Update Flow tab (6.1).
+   Frames are built with the same checksum as Protocol_SendFrame(); DATA bytes are from APP.BIN (workspace root, 6672 B). */
+(function () {
+  var SIZE = 6672, BLOCKS = 105, PC_SUM = 0xE3B7;
+  var D = {
+    1: '04008100010404800500f08001ff07800500e0800100008085000080007600004e0000a6010000808500008021e801c225e801c2000100019108009401000080',
+    2: '0500008000290000260000aac10800c225e801c021e801c05900009700010000f2cf2f90022e00d4003800006e0000a601781180850000804a0000ae01000080',
+    3: '05000080003900004a0000a601001088820200d4420200d40100008005000080003900002a0000a6020000dee22b00d40100008005000080003900008a0000a6',
+    4: '01000080050010809577009451770094c22102df422c00d402720000030000fa01720000900300008a0200aea16100000060b9830060c9833e00c0c54e0000a6',
+    37: '110304900042000011030494135c0080002000ff000060a21a0000e91e0000c56e0000a6110304901042000011030494135c0080002000ff002a00001a0000e9',
+    38: '1e0000c58e0000a6110304902042000011030494457001c0417001981a0000e91e0000c58e0000a6110304903042000011030494417001c0135c0080002000ff',
+    105: '0e720001037201720e72000103720172'
+  };
+
+  /* ---------- byte helpers ---------- */
+  function hx(b) { return ('0' + (b & 0xFF).toString(16).toUpperCase()).slice(-2); }
+  function hs(arr) { return arr.map(hx).join(' '); }
+  function hb(s) { var o = []; for (var i = 0; i < s.length; i += 2) o.push(parseInt(s.substr(i, 2), 16)); return o; }
+  function le(v, n) { var o = []; for (var i = 0; i < n; i++) o.push((v >>> (8 * i)) & 0xFF); return o; }
+  function h32(v) { return '0x' + ('0000000' + v.toString(16).toUpperCase()).slice(-8); }
+  function crcOf(id, pl) { var c = id + ((pl.length >> 8) & 0xFF) + (pl.length & 0xFF); pl.forEach(function (b) { c += b; }); return c & 0xFFFF; }
+  function short(arr) { return arr.length <= 10 ? hs(arr) : hs(arr.slice(0, 8)) + ' … ' + hs(arr.slice(-2)); }
+
+  /* protocol frame: [AA][ID][LEN_H][LEN_L][payload][CRC_H][CRC_L][55] */
+  function F(name, id, pl, plCells, act, o) {
+    o = o || {};
+    var len = pl.length, crc = o.crc != null ? o.crc : crcOf(id, pl);
+    var all = [0xAA, id, len >> 8, len & 0xFF].concat(pl, [crc >> 8, crc & 0xFF, 0x55]);
+    var cells = [['AA', 'START', 'sf'], [hx(id), 'MSG_ID · ' + name], [hx(len >> 8) + ' ' + hx(len), 'LEN = ' + len]]
+      .concat(plCells || [], [[hx(crc >> 8) + ' ' + hx(crc), o.crcLabel || 'CRC (sum)'], ['55', 'END', 'sf']]);
+    return { title: name + ' · ' + (o.dir || ''), cells: cells, act: act, size: all.length,
+      detail: (all.length <= 16 ? hs(all) : short(all)) + ' · ' + all.length + ' B', now: all.length + ' bytes' };
+  }
+  /* non-protocol step (USB pendrive access, reset inside the target) */
+  function U(title, cells, act) { return { title: title, cells: cells, act: act, detail: cells.map(function (c) { return c[0]; }).join(' · ') }; }
+
+  var NAME = hb('4150502e42494e00');   /* "APP.BIN" + NUL */
+  function fUSB(dir, act) {
+    return F('USB_DETECTED', 0x01, NAME, [[hs(NAME), 'filename "APP.BIN" + NUL', 'pl']], act, { dir: dir });
+  }
+  function fHDR(dev, dir, act) {
+    var start = dev ? 0x810000 : 0, end = dev ? 0x810000 + SIZE - 1 : SIZE, sum = dev ? PC_SUM : 0;
+    var pl = le(SIZE, 4).concat(le(start, 4), le(end, 4), le(BLOCKS, 2), le(sum, 2));
+    return F('HEADER', 0x03, pl, [
+      [hs(le(SIZE, 4)), 'fileSize = ' + SIZE + ' (LE)', 'pl'],
+      [hs(le(start, 4)), 'startAddress = ' + h32(start), 'pl'],
+      [hs(le(end, 4)), 'endAddress = ' + h32(end), 'pl'],
+      [hs(le(BLOCKS, 2)), 'numBlocks = ' + BLOCKS, 'pl'],
+      [hs(le(sum, 2)), 'checksum = 0x' + ('000' + sum.toString(16).toUpperCase()).slice(-4), 'pl']], act, { dir: dir });
+  }
+  function fEmpty(name, id, dir, act) { return F(name, id, [], [], act, { dir: dir }); }
+  function tot(n) { return n >= BLOCKS ? SIZE : n * 64; }
+  function fDATA(n, dir, act, bad) {
+    var data = hb(D[n]), pl = [n >> 8, n & 0xFF].concat(data), o = { dir: dir };
+    var cells = [[hx(n >> 8) + ' ' + hx(n), 'SEQ = ' + n + ' (BE)'], [short(data), 'DATA ' + data.length + ' B' + (bad ? ' · 1 bit flipped on the wire' : ''), 'pl']];
+    if (bad) { var good = crcOf(0x05, pl); o.crc = good; o.crcLabel = 'CRC sent 0x' + good.toString(16).toUpperCase() + ', target computes 0x' + ((good + 2) & 0xFFFF).toString(16).toUpperCase(); }
+    return F('DATA_PACKET #' + n, 0x05, pl, cells, act, o);
+  }
+  function fACK(n, dir, act, bad) {
+    var pl = [n >> 8, n & 0xFF];
+    return F('ACK #' + n, 0x06, pl, [[hx(n >> 8) + ' ' + hx(n), 'SEQ = ' + n + (bad ? ' · byte corrupted on the wire' : ''), 'pl']], act, { dir: dir });
+  }
+  function P(lbl, kind, path, f, o) { var p = { lbl: lbl, kind: kind, path: path, f: f }; for (var k in o || {}) p[k] = o[k]; return p; }
+
+  /* ---------- progress panel (6.3) ---------- */
+  function fmt(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  var stats = {
+    reset: function (api) { api.data.s = { acked: 0, retries: 0, nacks: 0, result: 'in progress' }; },
+    render: function (api) {
+      var s = api.data.s, tb = document.getElementById('fa-cbody'), bar = document.getElementById('fa-bar');
+      if (!s || !tb) return;
+      var b = tot(s.acked), pct = Math.round(b * 100 / SIZE);
+      if (bar) { bar.style.width = pct + '%'; bar.className = s.result === 'ERROR' ? 'er' : ''; }
+      var rows = [
+        ['Image', 'APP.BIN · ' + fmt(SIZE) + ' B · ' + BLOCKS + ' packets'],
+        ['Packets ACKed', s.acked + ' / ' + BLOCKS],
+        ['Bytes written', fmt(b) + ' / ' + fmt(SIZE) + ' B (' + pct + ' %)'],
+        ['Retries (current packet)', s.retries + ' of ' + 3 + ' (PROTOCOL_MAX_RETRIES)'],
+        ['NACKs received', String(s.nacks)],
+        ['UART time, data phase', s.acked + ' × 7.2 ms ≈ ' + (s.acked * 7.2 / 1000).toFixed(2) + ' s'],
+        ['Result', s.result]
+      ];
+      tb.textContent = '';
+      rows.forEach(function (r) {
+        var tr = document.createElement('tr'), a = document.createElement('td'), c = document.createElement('td');
+        a.className = 'k'; a.textContent = r[0]; c.className = 'num'; c.textContent = r[1];
+        if (r[0] === 'Result') c.className = s.result === 'ERROR' ? 'fa-bad' : s.result === 'FLASH_COMPLETE' ? 'fa-good' : '';
+        tr.appendChild(a); tr.appendChild(c); tb.appendChild(tr);
+      });
+    }
+  };
+  function stat(o) {
+    return function (api) {
+      if (!api.data.s) stats.reset(api);
+      for (var k in o) api.data.s[k] = o[k];
+      stats.render(api);
+    };
+  }
+
+  /* ---------- reusable step groups ---------- */
+  var BR = 'fa-br-st', BOOT = 'fa-boot-st', APPST = 'fa-app-st';
+  function host() { return { 'fa-drv-box': { 'class': 'hl' }, 'fa-pc-box': { 'class': 'gr' } }; }
+  function dev() { return { 'fa-drv-box': { 'class': 'gr' }, 'fa-pc-box': { 'class': 'hl' } }; }
+  function inBoot(attr) { attr['fa-app-box'] = { 'class': 'bx' }; attr['fa-boot-box'] = { 'class': 'hl' }; return attr; }
+
+  function appReset(firstPath, note) {
+    return [
+      { send: P('USB_DETECTED', 'cmd', firstPath, fUSB(firstPath[0] === 'pc' ? 'PC → bridge → target app' : 'bridge → target app',
+          'The running application sees AA 01, waits 50 ms, writes BOOTLOADER_MAGIC to RAM 0x4000 and executes asm("RESET").'), note ? { note: { br: note } } : {}) },
+      { say: ['app', 'flag = 0xB00710AD → asm("RESET")', 'info'], set: { 'fa-flag': '0xB00710AD', 'fa-app-st': 'set boot flag, reset' }, wait: 0.6 },
+      { send: P('RESET', 'rst', ['app', 'boot'], U('Software reset · application → bootloader',
+          [['0xB00710AD', 'BOOTLOADER_MAGIC @ 0x4000'], ['asm("RESET")', 'software reset', 'pl']],
+          'The flag survives the reset because bootloader data RAM starts at 0x4004. The bootloader reads it before SYSTEM_Initialize().')) },
+      { set: { 'fa-app-st': 'not running', 'fa-boot-st': 'UPDATE MODE · STATE_IDLE', 'fa-flag': '0x00000000 (cleared)' },
+        attr: inBoot({}), say: ['boot', 'flag found → UPDATE MODE', 'ok'] }
+    ];
+  }
+  /* one DATA/ACK exchange; m = 'host' | 'dev' */
+  function pkt(n, m) {
+    var d = m === 'dev', len = n >= BLOCKS ? SIZE - 104 * 64 : 64;
+    var dp = d ? ['pc', 'br', 'boot'] : ['br', 'boot'], ap = d ? ['boot', 'br', 'pc'] : ['boot', 'br'];
+    var done = n >= BLOCKS;
+    return [
+      { set: st(BR, d ? 'DEV_STATE_RECEIVE_DATA' : 'APP_STATE_SEND_PACKET'),
+        send: P('DATA #' + n, 'data', dp, fDATA(n, d ? 'PC → bridge → target' : 'bridge → target',
+          (d ? 'The bridge joins the 64 + 9 byte CDC packets, checks seq = devPacketSeq and sends the frame on UART2. ' : 'FILEIO_Read() gave ' + len + ' bytes; Protocol_SendDataPacket(' + n + ', …). ') +
+          'Target: seq = expectedSeq → WriteToFlash(), total ' + tot(n) + ' B.')) },
+      { say: ['boot', 'write ' + len + ' B · total ' + fmt(tot(n)) + (done ? ' ≥ fileSize' : ''), 'ok'] },
+      { set: st(BR, d ? 'DEV_STATE_WAIT_ACK' : 'APP_STATE_WAIT_ACK'),
+        send: P('ACK #' + n, 'rsp', ap, fACK(n, d ? 'target → bridge → PC' : 'target → bridge',
+          'Protocol_WaitForACK(' + n + ') returns PROTO_OK: packetSeq++, retryCount = 0' + (done ? '. All bytes sent.' : ', read the next 64 bytes.'))) },
+      { run: stat({ acked: n, retries: 0 }) }
+    ];
+  }
+  function skip(m) {
+    return { cap: ['Packets 5 to 104 (skipped)', 'The same exchange repeats 100 more times. ' + (m === 'dev' ? 'The PC tool waits up to 5 s for each ACK.' : 'FILEIO loads the next 512-byte sector from the pendrive every 8 packets.')],
+      run: stat({ acked: 104 }), say: ['br', 'packets 5 – 104: same exchange', 'grey'], wait: 1.3 };
+  }
+  function finish(m) {
+    var d = m === 'dev';
+    var o1 = {}; o1[BR] = d ? 'DEV_STATE_WAIT_FLASH' : 'APP_STATE_WAIT_FLASH_COMPLETE'; o1[BOOT] = 'FlushFlashBuffer()';
+    var o2 = {}; o2[APPST] = 'new application running'; o2[BOOT] = 'not running';
+    return [
+      { set: o1, send: P('FLASH_COMPLETE', 'rsp', d ? ['boot', 'br', 'pc'] : ['boot', 'br'],
+          fEmpty('FLASH_COMPLETE', 0x08, d ? 'target → bridge → PC' : 'target → bridge', 'Protocol_WaitForFlashComplete(60000) returns PROTO_OK.' + (d ? ' The bridge forwards AA 08 00 00 00 08 55 to the PC.' : ' The bridge looks for the next *.BIN file.')),
+          d ? {} : {}) },
+      { run: stat({ result: 'FLASH_COMPLETE' }), say: ['boot', 'delay_ms(500) → JumpToApp()', 'info'], wait: 0.5 },
+      { send: P('JUMP', 'rst', ['boot', 'app'], U('Jump · bootloader → new application',
+          [['0x810000', 'APP_START_ADDRESS'], ['JumpToApp()', 'after FLASH_COMPLETE + 500 ms', 'pl']],
+          'The bootloader jumps to the application that was just written. Note: the image checksum is not checked first (finding F3).')) },
+      { set: o2, attr: { 'fa-app-box': { 'class': 'hl' }, 'fa-boot-box': { 'class': 'bx' } }, say: ['app', 'new firmware running', 'ok'] }
+    ];
+  }
+  function midTransfer(attr) {
+    var o = {}; o[BR] = 'APP_STATE_READ_FILE'; o[BOOT] = 'STATE_RECEIVING_DATA'; o[APPST] = 'not running';
+    o['fa-flag'] = '0x00000000 (cleared)'; o['fa-br-led'] = 'LED RC1: toggles per packet';
+    return { run: stat({ acked: 36, retries: 0, nacks: 0, result: 'in progress' }), set: o, attr: inBoot(attr || host()) };
+  }
+  function S(o) { return o; }
+  function st(k, v, more) { var o = {}; o[k] = v; for (var x in more || {}) o[x] = more[x]; return o; }
+
+  /* ---------- scenarios ---------- */
+  var scenarios = [
+    { name: 'Host mode update (pendrive)', steps: [].concat(
+      [{ run: stat({ acked: 0, retries: 0, nacks: 0, result: 'in progress' }), attr: host(), set: st(BR, 'APP_STATE_DEVICE_CONNECTED'),
+         cap: ['Step 1 of 7: Pendrive attached, FAT32 mounted', 'No external VBUS on RB6, so the bridge runs USB Host mode and powers the pendrive. After EVENT_ATTACH the MSD driver enumerates the stick and FILEIO mounts it as drive \'A\'.'] },
+       { set: st(BR, 'APP_STATE_MOUNT_DISK'), send: P('MOUNT', 'usb', ['br', 'drv'], U('FILEIO_DriveMount · bridge → pendrive',
+           [['FILEIO_DriveMount', 'call'], ["'A'", 'drive letter'], ['boot sector + FAT', 'read over USB MSD (SCSI)', 'pl']], 'The MSD/SCSI layer reads the boot sector; FILEIO checks the FAT32 parameters.')) },
+       { send: P('FAT32 OK', 'usb', ['drv', 'br'], U('Mount result · pendrive → bridge', [['FILEIO_ERROR_NONE', 'result'], ['FAT32', 'file system', 'pl']], 'Drive A mounted.')) },
+       { set: st(BR, 'APP_STATE_FIND_FILE'), send: P('FIND *.BIN', 'usb', ['br', 'drv'], U('FILEIO_Find · bridge → pendrive',
+           [['FILEIO_Find', 'call'], ['"*.BIN"', 'pattern'], ['ARCHIVE', 'attribute'], ['first = true', 'new search', 'pl']], 'Searches the root directory for the first .BIN file.')) },
+       { send: P('APP.BIN', 'usb', ['drv', 'br'], U('Directory entry · pendrive → bridge', [['APP.BIN', 'shortFileName (8.3)'], ['6 672 B', 'fileSize', 'pl']], 'fileCount = 1, currentFileName = "APP.BIN".')),
+         },
+       { say: ['br', 'found APP.BIN · 6 672 B', 'ok'],
+         cap: ['Step 2 of 7: Tell the running application', 'APP_STATE_NOTIFY_MCU sends USB_DETECTED with the file name. The target application waits 50 ms, writes 0xB00710AD to RAM 0x4000 and resets into the bootloader.'],
+         set: st(BR, 'APP_STATE_NOTIFY_MCU') }],
+      appReset(['br', 'app']),
+      [{ cap: ['Step 3 of 7: Wait 1 s, notify the bootloader', 'APP_STATE_WAIT_READY waits delay_ms(1000) for the reset, sends USB_DETECTED again, then waits up to 30 s for READY_FOR_UPDATE.'],
+         set: st(BR, 'APP_STATE_WAIT_READY'), say: ['br', 'delay_ms(1000)', 'grey'], wait: 0.9 },
+       { send: P('USB_DETECTED', 'cmd', ['br', 'boot'], fUSB('bridge → bootloader (2nd)', 'Bootloader STATE_IDLE prints the file name and calls SendReady().')) },
+       { set: st(BOOT, 'STATE_IDLE → SendReady()'), send: P('READY', 'rsp', ['boot', 'br'], fEmpty('READY_FOR_UPDATE', 0x02, 'bootloader → bridge', 'Protocol_WaitForReady() returns PROTO_OK → APP_STATE_SEND_HEADER.')) },
+       { cap: ['Step 4 of 7: HEADER, erase, REQUEST_DOWNLOAD', 'The bridge sends size 6 672 B and 105 blocks (start address 0 and checksum 0 in Host mode, see finding F2). The bootloader erases ⌈6 672 / 4 096⌉ = 2 pages from 0x810000 and asks for data.'],
+         set: st(BR, 'APP_STATE_SEND_HEADER', st(BOOT, 'STATE_WAIT_HEADER')),
+         send: P('HEADER', 'cmd', ['br', 'boot'], fHDR(false, 'bridge → bootloader', 'Bootloader parses the 16 little-endian bytes and calls EraseAppFlash(6672).')) },
+       { set: st(BR, 'APP_STATE_WAIT_REQUEST', st(BOOT, 'EraseAppFlash(6672)')), say: ['boot', 'erase 2 × 4 KB pages', 'info'], wait: 0.9 },
+       { send: P('REQUEST', 'rsp', ['boot', 'br'], fEmpty('REQUEST_DOWNLOAD', 0x04, 'bootloader → bridge', 'expectedSeq = 1. Bridge: APP_STATE_OPEN_FILE.')) },
+       { set: st(BR, 'APP_STATE_OPEN_FILE', st(BOOT, 'STATE_RECEIVING_DATA')),
+         cap: ['Step 5 of 7: Open the file', 'FILEIO_Open() opens APP.BIN, packetSeq = 1. FILEIO reads one 512-byte sector and hands it out in 64-byte FILEIO_Read() calls, so one sector feeds 8 packets.'],
+         send: P('READ', 'usb', ['br', 'drv'], U('Sector read · bridge → pendrive', [['FILEIO_Read', 'call'], ['64 B', 'requested'], ['1 sector', 'loaded into the FILEIO buffer', 'pl']], 'FILEIO needs the first data sector of APP.BIN.')) },
+       { send: P('512 B', 'usb', ['drv', 'br'], U('Sector data · pendrive → bridge', [['512 B', 'sector'], ['packets 1–8', 'served from this sector', 'pl']], 'Copied into the FILEIO sector buffer.')) },
+       { cap: ['Step 6 of 7: DATA_PACKET / ACK loop', 'The bridge sends one 73-byte DATA_PACKET and waits for the ACK with the same sequence number before it reads the next 64 bytes. The target paces the transfer.'],
+         set: st('fa-br-led', 'LED RC1: toggles per packet') }],
+      pkt(1), pkt(2), pkt(3), pkt(4), [skip('host')],
+      [{ cap: ['Step 7 of 7: Last packet, FLASH_COMPLETE, new application', 'Packet 105 carries the last 16 bytes (LEN = 18). The target then has 6 672 B ≥ fileSize: it flushes its write buffer, sends ACK and FLASH_COMPLETE, and jumps to the new application 500 ms later.'] }],
+      pkt(105), finish('host'),
+      [{ set: st(BR, 'APP_STATE_FIND_FILE'), send: P('FIND next', 'usb', ['br', 'drv'], U('FILEIO_Find · bridge → pendrive', [['FILEIO_Find', 'call'], ['"*.BIN"', 'pattern'], ['first = false', 'continue search', 'pl']], 'After FLASH_COMPLETE the bridge looks for the next .BIN file.')) },
+       { send: P('none', 'usb', ['drv', 'br'], U('Search result · pendrive → bridge', [['no more files', 'result'], ['fileCount = 1', 'files done', 'pl']], 'fileCount > 0 → APP_STATE_DONE.')) },
+       { set: st(BR, 'APP_STATE_DONE', st('fa-br-led', 'LED RC1: slow blink (done)')), say: ['br', 'all .BIN files done', 'ok'], wait: 1 }]
+    ) },
+
+    { name: 'Device mode update (PC)', steps: [].concat(
+      [{ run: stat({ acked: 0, retries: 0, nacks: 0, result: 'in progress' }), attr: dev(), set: st(BR, 'DEV_STATE_IDLE', st('fa-br-mode', 'Mode: Device (CDC)')),
+         cap: ['Step 1 of 6: PC connected, bridge is a CDC device', 'External VBUS on RB6 → USB Device mode (virtual COM port, LED blinks 3×). firmware_sender.py opens the port at 115 200 baud and sends USB_DETECTED. The bridge forwards it to the target.'] }],
+      appReset(['pc', 'br', 'app']),
+      [{ cap: ['Step 2 of 6: Bridge waits 1 s, READY goes back to the PC', 'DEV_STATE_WAIT_READY waits 1 s, repeats USB_DETECTED to the bootloader, and relays READY_FOR_UPDATE to the PC. The PC waits up to 15 s for it.'],
+         set: st(BR, 'DEV_STATE_WAIT_READY'), say: ['br', 'delay_ms(1000)', 'grey'], wait: 0.9 },
+       { send: P('USB_DETECTED', 'cmd', ['br', 'boot'], fUSB('bridge → bootloader (2nd)', 'Sent by the bridge itself; the PC sent USB_DETECTED only once.')) },
+       { send: P('READY', 'rsp', ['boot', 'br', 'pc'], fEmpty('READY_FOR_UPDATE', 0x02, 'bootloader → bridge → PC', 'The bridge builds AA 02 00 00 00 02 55 and sends it with putUSBUSART().'),
+           {}) },
+       { cap: ['Step 3 of 6: HEADER from the PC', 'The PC tool sends start address 0x810000 and the byte sum 0xE3B7. DEV_STATE_WAIT_HEADER_PC parses the 16 bytes and DEV_STATE_SEND_HEADER sends them to the bootloader, which erases 2 pages.'],
+         set: st(BR, 'DEV_STATE_WAIT_HEADER_PC', st(BOOT, 'STATE_WAIT_HEADER')),
+         send: P('HEADER', 'cmd', ['pc', 'br', 'boot'], fHDR(true, 'PC → bridge → bootloader', 'Bootloader parses the header and erases 2 × 4 KB pages.'), {}) },
+       { set: st(BR, 'DEV_STATE_WAIT_REQUEST', st(BOOT, 'EraseAppFlash(6672)')), say: ['boot', 'erase 2 × 4 KB pages', 'info'], wait: 0.9 },
+       { send: P('REQUEST', 'rsp', ['boot', 'br', 'pc'], fEmpty('REQUEST_DOWNLOAD', 0x04, 'bootloader → bridge → PC', 'Bridge: devPacketSeq = 1, then DEV_STATE_RECEIVE_DATA.'), {}) },
+       { set: st(BR, 'DEV_STATE_RECEIVE_DATA', st(BOOT, 'STATE_RECEIVING_DATA')),
+         cap: ['Step 4 of 6: DATA from the PC, ACK back', 'Each 73-byte frame arrives as a 64-byte and a 9-byte CDC packet (endpoint size 64). The bridge joins them in cdcAccumBuffer, sends the frame on UART2 and forwards the target\'s ACK. The PC waits up to 5 s per ACK.'] }],
+      pkt(1, 'dev'), pkt(2, 'dev'), [skip('dev')],
+      [{ cap: ['Step 5 of 6: Last packet and FLASH_COMPLETE', 'Packet 105 (16 bytes) completes the image. FLASH_COMPLETE goes back to the PC, the target jumps to the new application.'] }],
+      pkt(105, 'dev'), finish('dev'),
+      [{ cap: ['Step 6 of 6: Done', 'DEV_STATE_DONE: slow LED blink. A new USB_DETECTED from the PC starts the next update.'],
+         set: st(BR, 'DEV_STATE_DONE', st('fa-br-led', 'LED RC1: slow blink (done)')), say: ['pc', 'SUCCESS! Firmware update complete.', 'ok'], wait: 1.2 }]
+    ) },
+
+    { name: 'Corrupted DATA frame', steps: [].concat(
+      [S(midTransfer()),
+       { cap: ['Packet #37 is corrupted on the wire', '36 packets are written. One bit of packet #37 flips on the UART line. The target ReadFrame() computes a different checksum and returns false. It sends no NACK, so the bridge only sees silence.'],
+         set: st(BR, 'APP_STATE_SEND_PACKET'),
+         send: P('DATA #37', 'data', ['br', 'boot'], fDATA(37, 'bridge → target', 'CRC mismatch: ReadFrame() prints "[ERR] CRC mismatch" and returns false. Nothing is written, nothing is sent.', true),
+           { drop: { why: 'CRC mismatch → frame ignored' } }) },
+       { cap: ['The bridge waits for the ACK (30 s)', 'Protocol_WaitForACK(37, 30000) sees no START byte for PROTOCOL_TIMEOUT_MS and returns PROTO_ERROR_TIMEOUT. retryCount = 1 (< 3), so APP_STATE_SEND_PACKET sends the same dataBuffer again.'],
+         set: st(BR, 'APP_STATE_WAIT_ACK'), say: ['br', 'no ACK … 30 s (shortened)', 'grey'], wait: 1.6 },
+       { say: ['br', 'timeout → retry 1 of 3', 'bad'], run: stat({ retries: 1 }), wait: 0.4 }],
+      pkt(37), pkt(38),
+      [{ cap: ['Recovered, but it cost 30 s', 'The transfer goes on. Set PROTOCOL_TIMEOUT_MS from the measured Traveo II write time (F7), or let the target answer a bad CRC with NACK so the bridge can resend at once.'], wait: 1.4 }]
+    ) },
+
+    { name: 'Corrupted ACK', steps: [].concat(
+      [S(midTransfer()),
+       { cap: ['Packet #37 is written, its ACK is corrupted', 'The target writes packet #37 and sets expectedSeq = 38. The ACK is damaged on the way back, so the bridge gets PROTO_ERROR_CRC and counts a retry.'],
+         set: st(BR, 'APP_STATE_SEND_PACKET'),
+         send: P('DATA #37', 'data', ['br', 'boot'], fDATA(37, 'bridge → target', 'Valid frame: written to flash, total 2 368 B, expectedSeq = 38.')) },
+       { say: ['boot', 'written · now expects #38', 'ok'], set: st(BR, 'APP_STATE_WAIT_ACK') },
+       { send: P('ACK #37', 'rsp', ['boot', 'br'], fACK(37, 'target → bridge', 'Bridge: CRC mismatch → PROTO_ERROR_CRC → retryCount = 1 → resend #37.', true),
+           { drop: { why: 'CRC mismatch → retry 1 of 3' } }) },
+       { run: stat({ retries: 1 }), cap: ['The resent #37 gets NACK', 'The target compares seq 37 with expectedSeq = 38, prints "WRONG SEQ! Expected 38" and sends NACK. It does not repeat the lost ACK.'] },
+       { set: st(BR, 'APP_STATE_SEND_PACKET'), send: P('DATA #37', 'data', ['br', 'boot'], fDATA(37, 'bridge → target (retry 1)', 'seq 37 ≠ expectedSeq 38 → SendNACK(). Nothing is written.')) },
+       { say: ['boot', 'WRONG SEQ, expected 38', 'bad'], set: st(BR, 'APP_STATE_WAIT_ACK'),
+         send: P('NACK', 'nack', ['boot', 'br'], fEmpty('NACK', 0x07, 'target → bridge', 'PROTO_ERROR_NACK → retryCount = 2 → resend #37.')) },
+       { run: stat({ retries: 2, nacks: 1 }), say: ['br', 'NACK → retry 2 of 3', 'bad'], set: st(BR, 'APP_STATE_SEND_PACKET'),
+         send: P('DATA #37', 'data', ['br', 'boot'], fDATA(37, 'bridge → target (retry 2)', 'seq 37 ≠ expectedSeq 38 → SendNACK() again.')) },
+       { set: st(BR, 'APP_STATE_WAIT_ACK'), send: P('NACK', 'nack', ['boot', 'br'], fEmpty('NACK', 0x07, 'target → bridge', 'retryCount = 3 = PROTOCOL_MAX_RETRIES → FILEIO_Close(), APP_STATE_ERROR.')) },
+       { run: stat({ retries: 3, nacks: 2, result: 'ERROR' }),
+         set: st(BR, 'APP_STATE_ERROR', st('fa-br-led', 'LED RC1: fast blink (error)', st(BOOT, 'waiting for #38'))), attr: { 'fa-br-box': { 'class': 'er' } },
+         say: ['br', 'update aborted', 'bad'],
+         cap: ['One damaged ACK aborts the whole update (finding F10)', 'The bridge stops in APP_STATE_ERROR; the target waits for #38. The app area is half written, but IsAppValid() only checks the reset vector from packet 1, so after a power cycle the bootloader would jump into the partial image (F3). Fix: when seq = expectedSeq − 1, send the ACK again without writing.'], wait: 2.2 }]
+    ) },
+
+    { name: 'Target not answering', steps: [].concat(
+      [{ run: stat({ acked: 0, retries: 0, nacks: 0, result: 'in progress' }), attr: { 'fa-drv-box': { 'class': 'hl' }, 'fa-pc-box': { 'class': 'gr' }, 'fa-app-box': { 'class': 'gr' }, 'fa-boot-box': { 'class': 'gr' } },
+         set: st(BR, 'APP_STATE_NOTIFY_MCU', st(APPST, 'no power / wrong UART pins')),
+         cap: ['USB_DETECTED gets no answer', 'APP.BIN is found on the pendrive, but the target is unpowered, held in reset, or not wired to UART2.'],
+         send: P('USB_DETECTED', 'cmd', ['br', 'app'], fUSB('bridge → target app', 'No receiver: nothing happens on the target.'), { drop: { why: 'no reply' } }) },
+       { set: st(BR, 'APP_STATE_WAIT_READY'), say: ['br', 'delay_ms(1000)', 'grey'], wait: 0.9 },
+       { send: P('USB_DETECTED', 'cmd', ['br', 'boot'], fUSB('bridge → bootloader (2nd)', 'No receiver: no READY_FOR_UPDATE.'), { drop: { why: 'no reply' } }) },
+       { cap: ['READY timeout after 30 s', 'Protocol_WaitForReady(PROTOCOL_TIMEOUT_MS) returns PROTO_ERROR_TIMEOUT. There is no retry at this step.'],
+         say: ['br', 'no READY … 30 s (shortened)', 'grey'], wait: 1.6 },
+       { run: stat({ result: 'ERROR' }), set: st(BR, 'APP_STATE_ERROR', st('fa-br-led', 'LED RC1: fast blink (error)')), attr: { 'fa-br-box': { 'class': 'er' } },
+         say: ['br', 'timeout → APP_STATE_ERROR', 'bad'],
+         cap: ['What to check', 'Target power and common GND; RB2 (U2TX) to the target RX and RB3 (U2RX) to the target TX; 115 200 baud on both sides. To restart, remove and re-insert the pendrive (EVENT_DETACH → APP_STATE_WAIT_FOR_DEVICE).'], wait: 2 }]
+    ) }
+  ];
+
+  FlowAnim.mount({
+    root: 'fa-upd',
+    section: 'flow',
+    speed: 340,
+    gap: 0.2,
+    inspectorLabel: 'Frame',
+    sizeNote: ' on UART2 (10 bits per byte at 8N1)',
+    replayText: 'same scenario again',
+    kinds: {
+      cmd:  { color: '#1c3460', label: 'Bridge command (USB_DETECTED, HEADER)' },
+      data: { color: '#c25e00', label: 'DATA_PACKET' },
+      rsp:  { color: '#2f7d1e', label: 'Target reply (READY, REQUEST, ACK, FLASH_COMPLETE)' },
+      nack: { color: '#a3141a', label: 'NACK' },
+      usb:  { color: '#6b4fa0', label: 'Pendrive access (FILEIO / MSD)' },
+      rst:  { color: '#6b6b6b', label: 'Reset / jump inside the target' }
+    },
+    nodes: {
+      drv:  { x: 210, y: 150, name: 'Pendrive', bubble: [40, 88, 'start'] },
+      pc:   { x: 210, y: 350, name: 'PC tool', bubble: [40, 432, 'start'] },
+      br:   { x: 540, y: 250, name: 'Bridge', bubble: [540, 128],
+              hop: function (p, from, to) {
+                if (from === 'pc') return { text: 'parses the CDC frame, sends ' + p.lbl + ' on UART2', bubble: p.lbl + ' → UART2' };
+                return { text: 'relays ' + p.lbl + ' to the PC over CDC', bubble: p.lbl + ' → CDC' };
+              } },
+      app:  { x: 1050, y: 165, name: 'Target app', bubble: [1050, 100] },
+      boot: { x: 1050, y: 345, name: 'Bootloader', bubble: [1050, 432] }
+    },
+    links: [
+      ['drv', 'br', { c: [[340, 150], [380, 250]] }],
+      ['pc', 'br', { c: [[340, 350], [380, 250]] }],
+      ['br', 'app', { c: [[800, 250], [830, 165]] }],
+      ['br', 'boot', { c: [[800, 250], [830, 345]] }],
+      ['app', 'boot', { c: [[1210, 165], [1210, 345]] }]
+    ],
+    stats: stats,
+    scenarios: scenarios
+  });
+})();
+
+(function () {
+  Array.prototype.forEach.call(document.querySelectorAll('[data-goto]'), function (b) {
+    b.addEventListener('click', function () {
+      var t = document.querySelector('nav.tabs button[data-tab="' + b.getAttribute('data-goto') + '"]');
+      if (t) t.click();
+    });
+  });
 })();
 </script>
